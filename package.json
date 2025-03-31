@@ -1,6 +1,6 @@
 {
   "name": "com.unity.render-pipelines.universal.rendering",
-  "description": "Shader\u539f\u59cb\u8d44\u6e90",
+  "description": "\u57fa\u4e8eUnity6\u7684URP\u6e32\u67d3\u989d\u5916\u529f\u80fd",
   "version": "1.0.0",
-  "displayName": "\u6e32\u67d3\u529f\u80fd"
+  "displayName": "_RenderCore"
 }
