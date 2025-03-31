@@ -1,5 +1,5 @@
 {
-  "name": "com.nemo.art.rendering-raw",
+  "name": "com.unity.render-pipelines.universal.rendering",
   "description": "Shader\u539f\u59cb\u8d44\u6e90",
   "version": "1.0.0",
   "displayName": "\u6e32\u67d3\u529f\u80fd"
