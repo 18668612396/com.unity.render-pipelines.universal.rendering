@@ -55,7 +55,7 @@ public class EffectStandardShaderEditor : ModularShaderEditor
         { ("法线", "_EnableNormalMap"), DrawNormalModule },
         { ("遮罩", "_EnableMask"), DrawMaskModule },
         { ("溶解", "_EnableDissolution"), DrawDissolveModule },
-        { ("流动", "_EnableFlow"), DrawFlowModule },
+        { ("扰动", "_EnableFlow"), DrawFlowModule },
         { ("菲涅尔", "_EnableFresnel"), DrawFresnelModule },
         { ("深度混合", "_EnableDepthBlend"), DrawDepthBlendModule },
         { ("热扭曲", "_EnableScreenDistortion"), DrawScreenDistortionModule }
@@ -228,7 +228,7 @@ public class EffectStandardShaderEditor : ModularShaderEditor
     private void DrawFlowModule(MaterialEditor materialEditor)
     {
         // 绘制流动模块的属性
-        materialEditor.TexturePropertySingleLine(new GUIContent("流动纹理"), FindProperty("_FlowTex"));
+        materialEditor.TexturePropertySingleLine(new GUIContent("扰动纹理"), FindProperty("_FlowTex"));
         materialEditor.TextureScaleOffsetProperty(FindProperty("_FlowTex"));
         materialEditor.ShaderProperty(FindProperty("_EnableVertexAnimation"), "启用顶点动画");
         materialEditor.ShaderProperty(FindProperty("_VertexAnimationStrength"), "顶点动画强度");
@@ -236,8 +236,8 @@ public class EffectStandardShaderEditor : ModularShaderEditor
         Vector4 flowSpeed = FindProperty("_FlowSpeed").vectorValue;
         Vector2 flowSpeed01 = new Vector2(flowSpeed.x, flowSpeed.y);
         Vector2 flowSpeed02 = new Vector2(flowSpeed.z, flowSpeed.w);
-        flowSpeed01 = EditorGUILayout.Vector2Field("流动速度01", flowSpeed01);
-        flowSpeed02 = EditorGUILayout.Vector2Field("流动速度02", flowSpeed02);
+        flowSpeed01 = EditorGUILayout.Vector2Field("扰动速度01", flowSpeed01);
+        flowSpeed02 = EditorGUILayout.Vector2Field("扰动速度02", flowSpeed02);
         flowSpeed.x = flowSpeed01.x;
         flowSpeed.y = flowSpeed01.y;
         flowSpeed.z = flowSpeed02.x;
@@ -271,7 +271,7 @@ public class EffectStandardShaderEditor : ModularShaderEditor
     }
 
     /// <summary>
-    /// 绘制在其他模块上，用于绘制流动模块的属性，只有打开了流动模块才会显示
+    /// 绘制在其他模块上，用于绘制扰动模块的属性，只有打开了扰动模块才会显示
     /// </summary>
     /// <param name="materialEditor"></param>
     /// <param name="index">0 : main , 1: second, 2 : mask , 3: dissolution</param>
@@ -280,7 +280,7 @@ public class EffectStandardShaderEditor : ModularShaderEditor
         if (FindProperty("_EnableFlow").floatValue > 0.5f)
         {
             Vector4 flowValue = FindProperty("_FlowIntensityToMultiMap").vectorValue;
-            flowValue[index] = EditorGUILayout.Slider("流动强度", flowValue[index], 0, 1);
+            flowValue[index] = EditorGUILayout.Slider("扰动强度", flowValue[index], 0, 1);
             FindProperty("_FlowIntensityToMultiMap").vectorValue = flowValue;
             GUI.enabled = true;
         }
