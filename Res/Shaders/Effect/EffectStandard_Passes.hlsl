@@ -32,42 +32,16 @@ struct Varyings
     float2 ramp_uv : TEXCOORD09;
 };
 
-float2 RotateTextureUV(float2 uv, float4 rotationParams)
-{
-    return float2(
-        dot(uv, float2(rotationParams.x, rotationParams.y)) + rotationParams.z,
-        dot(uv, float2(-rotationParams.y, rotationParams.x)) + rotationParams.w
-    );
-}
-
-float2 ApplyUVAnimation(Attributes input, int animationSource, int channel01, int channel02, float4 _ST = float4(1, 1, 0, 0))
-{
-    float2 mainAnimation = 0;
-    if (animationSource == 1)
-    {
-        mainAnimation = float2(input.custom01[channel01 - 1], input.custom01[channel02 - 1]);
-    }
-    else if (animationSource == 2)
-    {
-        mainAnimation = float2(input.custom02[channel01 - 1], input.custom02[channel02 - 1]);
-    }
-    else if (animationSource == 3)
-    {
-        mainAnimation = _Time.y * _ST.zw * min(float2(channel01, channel02), 1);
-    }
-    return mainAnimation;
-}
-
 Varyings Vertex(Attributes input)
 {
     Varyings output = (Varyings)0;
 
-    float2 mainAnimation = ApplyUVAnimation(input, _MainAnimationSource, _MainAnimationCustomDataChannel01, _MainAnimationCustomDataChannel02, _MainTex_ST);
+    float2 mainAnimation = ApplyUVAnimation(_MainAnimationSource, input.custom01, _MainAnimationCustomDataChannel01, input.custom02, _MainAnimationCustomDataChannel02, _MainTex_ST);
     output.uv.xy = RotateTextureUV(TRANSFORM_TEX(input.texcoord0, _MainTex), _MainRotationParams) + mainAnimation;
-    float2 secondAnimation = ApplyUVAnimation(input, _SecondAnimationSource, _SecondAnimationCustomDataChannel01, _SecondAnimationCustomDataChannel02, _SecondTex_ST);
+    float2 secondAnimation = ApplyUVAnimation(_SecondAnimationSource, input.custom01, _SecondAnimationCustomDataChannel01, input.custom02, _SecondAnimationCustomDataChannel02, _SecondTex_ST);
     output.second_uv.xy = RotateTextureUV(TRANSFORM_TEX(input.texcoord0, _SecondTex) + secondAnimation, _SecondRotationParams);
     output.second_uv.zw = TRANSFORM_TEX(input.texcoord0, _SecondDissolutionTex);
-    float2 maskAnimation = ApplyUVAnimation(input, _MaskAnimationSource, _MaskAnimationCustomDataChannel01, _MaskAnimationCustomDataChannel02, _MaskTex_ST);
+    float2 maskAnimation = ApplyUVAnimation(_MaskAnimationSource, input.custom01, _MaskAnimationCustomDataChannel01, input.custom02, _MaskAnimationCustomDataChannel02, _MaskTex_ST);
     output.mask_uv = RotateTextureUV(TRANSFORM_TEX(input.texcoord0, _MaskTex), _MaskRotationParams) + maskAnimation;
     output.dissolution_uv = RotateTextureUV(TRANSFORM_TEX(input.texcoord0, _DissolutionTex), _DissolutionRotationParams);
     //flow
@@ -100,24 +74,6 @@ Varyings Vertex(Attributes input)
     return output;
 }
 
-float GetDissolutionFactor(float noise, float threshold, float feather)
-{
-    float sMin;
-    float sMax;
-
-    float base = lerp(0 - feather, 1 + feather, threshold);
-    sMin = base - feather;
-    sMax = base + feather;
-    float sValue = noise;
-    float sFactor = smoothstep(sMin, sMax, sValue);
-    return sFactor;
-}
-
-
-float2 ApplyFlowDistortion(float2 uv, float2 flowVector, float intensity)
-{
-    return uv + flowVector * intensity;
-}
 
 half4 Fragment(Varyings input) : SV_Target
 {
@@ -333,13 +289,9 @@ half4 Fragment(Varyings input) : SV_Target
     half4 finalColor = 1;
     if (_EnableScreenDistortion > 0.5)
     {
-        half4 distortionChannel = SAMPLE_TEXTURE2D(_ScreenDistortionTexture, sampler_ScreenDistortionTexture, input.base_uv * _ScreenDistortionTexture_ST.xy + _ScreenDistortionTexture_ST.zw * _Time.y) * 2 - 1;
-        // 获取屏幕空间UV
-        float2 screenUV = input.screenPos.xy / input.screenPos.w;
-        half4 sample_opaque = SAMPLE_TEXTURE2D_X(_CameraOpaqueTexture, sampler_CameraOpaqueTexture, screenUV + distortionChannel.xy * finalAlpha * _ScreenDistortionIntensity);
-        finalColor.rgb = sample_opaque;
-        finalColor.a = 1;
-        return finalColor;
+        half4 temp = half4(finalRGB, finalAlpha);
+        half screenDistortion = saturate(temp[_ScreenDistortionChannel] * _ScreenDistortionIntensity) * 0.5 + 0.5;
+        return screenDistortion;
     }
     else
     {

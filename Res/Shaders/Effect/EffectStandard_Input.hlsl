@@ -2,6 +2,9 @@
 #define EFFECT_STANDARD_INPUT_INCLUDED
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+
+
 CBUFFER_START(UnityPerMaterial)
     int _BlendMode;
     float _Cutoff;
@@ -82,7 +85,7 @@ CBUFFER_START(UnityPerMaterial)
     float _VertexAnimationStrength;
     int _DissolutionBlendAlpha;
     //屏幕扭曲
-    half4 _ScreenDistortionTexture_ST;
+    int _ScreenDistortionChannel;
     float _EnableScreenDistortion;
     float _ScreenDistortionIntensity;
     //depth blend
@@ -99,7 +102,6 @@ CBUFFER_START(UnityPerMaterial)
     float _EnableMaskDebuger;
     float _EnableDissolution;
     float _EnableFlow;
-
 CBUFFER_END
 
 TEXTURE2D(_MainTex);
@@ -118,6 +120,4 @@ TEXTURE2D(_SecondDissolutionTex);
 SAMPLER(sampler_SecondDissolutionTex);
 TEXTURE2D(_RampMap);
 SAMPLER(sampler_RampMap);
-TEXTURE2D(_ScreenDistortionTexture);
-SAMPLER(sampler_ScreenDistortionTexture);
 #endif

@@ -96,7 +96,7 @@ Shader "XEffect/EffectStandard"
         _FresnelPower("Fresnel Power", Range(0, 10)) = 1
         //屏幕扭曲
         [Toggle]_EnableScreenDistortion("Enable Screen Distortion", Float) = 0
-        _ScreenDistortionTexture("Screen Distortion Texture", 2D) = "bump" {}
+        _ScreenDistortionChannel("Screen Distortion Channel", Float) = 3//根据当前材质球输出的RGBA做选择
         _ScreenDistortionIntensity("Screen Distortion Intensity", Range(0, 10)) = 0
         //渲染状态，通用
         [Enum()]_BlendMode("BlendMode", Float) = 0
@@ -128,6 +128,7 @@ Shader "XEffect/EffectStandard"
             "Queue" = "Transparent"
             "IgnoreProjector" = "True"
             "RenderPipeline" = "UniversalPipeline"
+            "LightMode" = "UniversalForward"
         }
         Stencil
         {
@@ -139,7 +140,7 @@ Shader "XEffect/EffectStandard"
         }
         Pass
         {
-            Name "Unlit"
+            Name "EffectStandard"
             Blend [_SrcBlend] [_DstBlend], [_SrcBlendA] [_DstBlendA]
             BlendOp Add
             ZTest [_ZTest]
@@ -151,6 +152,34 @@ Shader "XEffect/EffectStandard"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareOpaqueTexture.hlsl"
             #include "EffectStandard_Input.hlsl"
+            #include "EffectStaandard_Function.hlsl"
+            #include "EffectStandard_Passes.hlsl"
+            #pragma vertex Vertex
+            #pragma fragment Fragment
+            #pragma shader_feature_local ENABLE_MASK_ON
+            #pragma shader_feature_local ENABLE_SECOND_ON
+            #pragma shader_feature_local ENABLE_SECOND_ON
+            ENDHLSL
+        }
+        Pass
+        {
+            Name "ScreenDistortion"
+            Tags
+            {
+                "LightMode" = "UniversalScreenDistortion"
+            }
+
+            Blend [_SrcBlend] [_DstBlend], [_SrcBlendA] [_DstBlendA]
+            BlendOp Add
+            ZTest [_ZTest]
+            ZWrite [_ZWrite]
+            Cull [_CullMode]
+            HLSLPROGRAM
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareOpaqueTexture.hlsl"
+            #include "EffectStandard_Input.hlsl"
+            #include "EffectStaandard_Function.hlsl"
             #include "EffectStandard_Passes.hlsl"
             #pragma vertex Vertex
             #pragma fragment Fragment

@@ -45,7 +45,7 @@ namespace Unity.RenderPipelines.Universal.Rendering.Runtime
             var resourceData = frameData.Get<UniversalResourceData>();
             var targetDesc = renderGraph.GetTextureDesc(resourceData.cameraColor);
             targetDesc.name = "_ScreenDistortionTexture";
-            targetDesc.format = GraphicsFormat.R8G8_UNorm;
+            targetDesc.format = GraphicsFormat.R16G16_SFloat;
             screenDistortionData.ScreenDistortionTexture = renderGraph.CreateTexture(targetDesc);
             // This adds a raster render pass to the graph, specifying the name and the data type that will be passed to the ExecutePass function.
             using (var builder = renderGraph.AddRasterRenderPass<PassData>(passName, out var passData))

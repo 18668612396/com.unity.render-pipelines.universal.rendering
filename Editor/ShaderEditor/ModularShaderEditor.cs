@@ -12,7 +12,7 @@ using UnityEditor.Rendering;
 
         private MaterialEditor m_MaterialEditor;
         private MaterialProperty[] m_Properties;
-        private Material m_Material;
+        protected Material material;
 
         private bool[] showModule = new bool[0];
 
@@ -68,9 +68,9 @@ using UnityEditor.Rendering;
         {
             m_Properties = properties;
             m_MaterialEditor = materialEditor;
-            m_Material = materialEditor.target as Material;
+            material = materialEditor.target as Material;
             //做一些初始化工作
-            if (!initialized && m_Material != null)
+            if (!initialized && material != null)
             {
                 InitializeModuleStates();
                 initialized = true;
@@ -137,7 +137,7 @@ using UnityEditor.Rendering;
                             menu.AddItem(new GUIContent("移除模块"), false, () => { RemoveModule(moduleName); });
                             menu.ShowAsContext();
                         },
-                        defaultExpanded: true,debuger: m_Material.HasProperty(moduleEntry.Key.PropertyName + "Debuger") ? FindProperty(moduleEntry.Key.PropertyName + "Debuger") : null); // 默认展开
+                        defaultExpanded: true,debuger: material.HasProperty(moduleEntry.Key.PropertyName + "Debuger") ? FindProperty(moduleEntry.Key.PropertyName + "Debuger") : null); // 默认展开
 
                 }
             }
@@ -162,8 +162,8 @@ using UnityEditor.Rendering;
             m_ModuleStates.Clear();
             foreach (var module in ModuleProperties)
             {
-                bool isEnabled = m_Material.HasProperty(module.Key.PropertyName)
-                                 && m_Material.GetFloat(module.Key.PropertyName) > 0.5f;
+                bool isEnabled = material.HasProperty(module.Key.PropertyName)
+                                 && material.GetFloat(module.Key.PropertyName) > 0.5f;
                 m_ModuleStates[module.Key.ModuleName] = isEnabled;
                 SetShaderKeyword(module.Key.ModuleName, isEnabled);
             }
@@ -200,7 +200,7 @@ using UnityEditor.Rendering;
         private void AddModule(string moduleName)
         {
             // 记录变更前的状态
-            Undo.RegisterCompleteObjectUndo(m_Material, "Add Module");
+            Undo.RegisterCompleteObjectUndo(material, "Add Module");
 
             if (!m_ModuleStates.ContainsKey(moduleName))
             {
@@ -212,27 +212,27 @@ using UnityEditor.Rendering;
             }
 
             var moduleEntry = ModuleProperties.First(x => x.Key.ModuleName == moduleName);
-            if (m_Material.HasProperty(moduleEntry.Key.PropertyName))
+            if (material.HasProperty(moduleEntry.Key.PropertyName))
             {
-                m_Material.SetFloat(moduleEntry.Key.PropertyName, 1.0f);
-                EditorUtility.SetDirty(m_Material);
+                material.SetFloat(moduleEntry.Key.PropertyName, 1.0f);
+                EditorUtility.SetDirty(material);
             }
-            m_Material.EnableKeyword(moduleEntry.Key.ModuleName);
+            material.EnableKeyword(moduleEntry.Key.ModuleName);
             SetShaderKeyword(moduleEntry.Key.PropertyName, true);
         }
 
         private void RemoveModule(string moduleName)
         {
             // 记录变更前的状态
-            Undo.RegisterCompleteObjectUndo(m_Material, "Remove Module");
+            Undo.RegisterCompleteObjectUndo(material, "Remove Module");
 
             m_ModuleStates[moduleName] = false;
 
             var moduleEntry = ModuleProperties.First(x => x.Key.ModuleName == moduleName);
-            if (m_Material.HasProperty(moduleEntry.Key.PropertyName))
+            if (material.HasProperty(moduleEntry.Key.PropertyName))
             {
-                m_Material.SetFloat(moduleEntry.Key.PropertyName, 0.0f);
-                EditorUtility.SetDirty(m_Material);
+                material.SetFloat(moduleEntry.Key.PropertyName, 0.0f);
+                EditorUtility.SetDirty(material);
             }
             SetShaderKeyword(moduleEntry.Key.PropertyName, false);
         }
@@ -241,7 +241,7 @@ using UnityEditor.Rendering;
         private void MoveModule(string moduleName, bool moveUp)
         {
             // 记录变更前的状态
-            Undo.RegisterCompleteObjectUndo(m_Material, $"Move Module {(moveUp ? "Up" : "Down")}");
+            Undo.RegisterCompleteObjectUndo(material, $"Move Module {(moveUp ? "Up" : "Down")}");
 
             var activeModules = m_ModuleStates
                 .Where(m => m.Value)
@@ -301,9 +301,9 @@ using UnityEditor.Rendering;
         {
             string keyword = moduleName;
             if (enable)
-                m_Material.EnableKeyword(keyword);
+                material.EnableKeyword(keyword);
             else
-                m_Material.DisableKeyword(keyword);
+                material.DisableKeyword(keyword);
         }
 
         /// <summary>

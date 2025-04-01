@@ -62,9 +62,11 @@ public class EffectStandardShaderEditor : ModularShaderEditor
     };
 
     public readonly string[] s_BlendeModeNames = Enum.GetNames(typeof(RenderingBlendUtils.BlendMode));
-
     protected override void OnBeforeDefaultGUI(MaterialEditor materialEditor)
     {
+        material.SetShaderPassEnabled("UniversalScreenDistortion",FindProperty("_EnableScreenDistortion").floatValue > 0.5f);
+        material.SetShaderPassEnabled("UniversalForward",FindProperty("_EnableScreenDistortion").floatValue < 0.5f);
+        
         UpdateRenderState(materialEditor);
         DoPopup(materialEditor, new GUIContent("混合模式"), FindProperty("_BlendMode"), s_BlendeModeNames);
         RenderingBlendUtils.BlendMode blendMode = (RenderingBlendUtils.BlendMode)FindProperty("_BlendMode").floatValue;
@@ -261,8 +263,7 @@ public class EffectStandardShaderEditor : ModularShaderEditor
 
     private void DrawScreenDistortionModule(MaterialEditor materialEditor)
     {
-        materialEditor.TexturePropertySingleLine(new GUIContent("热扭曲纹理(法线)"), FindProperty("_ScreenDistortionTexture"));
-        materialEditor.TextureScaleOffsetProperty(FindProperty("_ScreenDistortionTexture"));
+        FindProperty("_ScreenDistortionChannel").floatValue = (float)(XYZWChannel)EditorGUILayout.EnumPopup(new GUIContent("扭曲通道","使用当前材质球输出的RGBA做选择"), (XYZWChannel)FindProperty("_ScreenDistortionChannel").floatValue);
         materialEditor.ShaderProperty(FindProperty("_ScreenDistortionIntensity"), "热扭曲强度");
     }
 
