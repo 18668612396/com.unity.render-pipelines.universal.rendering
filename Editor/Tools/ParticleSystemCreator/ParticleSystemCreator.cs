@@ -3,6 +3,38 @@ using UnityEngine;
 
 public class ParticleSystemCreator : Editor
 {
+    [MenuItem("GameObject/Effects/空粒子系统", false, 10)]
+    public static void CreateEmptyParticleSystem(MenuCommand menuCommand)
+    {
+        //创建一个新的GameObject
+        GameObject go = new GameObject("Empty Particle");
+        //设置父对象,如果当前选择了一个对象,则将新对象设置为当前选择对象的子对象
+        GameObjectUtility.SetParentAndAlign(go, menuCommand.context as GameObject);
+        //确保新对象在层级视图中正确显示
+        Undo.RegisterCreatedObjectUndo(go, "Create " + go.name);
+        //添加组件
+        var particle = go.AddComponent<ParticleSystem>();
+        //设置粒子系统的属性
+        //1:关闭ShapeModule
+        DisableShapeModule(particle);
+        //关闭EmissionModule
+        DisableEmissionModule(particle);
+        //关闭Renderer模块
+        particle.GetComponent<ParticleSystemRenderer>().enabled = false;
+        //设置粒子的速度为0
+        SetSpeedToZero(particle);
+        //设置最大粒子数量
+        SetMaxParticles(particle,0);
+        //设置最大粒子尺寸
+        SetMaxParticleSize(particle);
+        //设置粒子的缩放模式
+        SetScalingMode(particle);
+        //选择当前这个GameObject
+        Selection.activeObject = go;
+    }
+
+
+
     [MenuItem("GameObject/Effects/静止单粒子Mesh", false, 10)]
     public static void CreateSingleMeshParticleSystem(MenuCommand menuCommand)
     {
@@ -26,7 +58,7 @@ public class ParticleSystemCreator : Editor
         //设置粒子的材质
         SetRendererMaterial(particle);
         //设置最大粒子数量
-        SetMaxParticles(particle);
+        SetMaxParticles(particle,1);
         //设置最大粒子尺寸
         SetMaxParticleSize(particle);
         //设置粒子的缩放模式
@@ -57,7 +89,7 @@ public class ParticleSystemCreator : Editor
         //设置粒子的材质
         SetRendererMaterial(particle);
         //设置最大粒子数量
-        SetMaxParticles(particle);
+        SetMaxParticles(particle,1);
         //设置最大粒子尺寸
         SetMaxParticleSize(particle);
         //设置粒子的缩放模式
@@ -73,17 +105,21 @@ public class ParticleSystemCreator : Editor
         var main = particle.main;
         main.loop = false;
     }
-
+    private static void DisableEmissionModule(ParticleSystem particle)
+    {
+        var emission = particle.emission;
+        emission.enabled = false;
+    }
     static void SetScalingMode(ParticleSystem particle)
     {
         var main = particle.main;
         main.scalingMode = ParticleSystemScalingMode.Hierarchy;
     }
 
-    static void SetMaxParticles(ParticleSystem particle)
+    static void SetMaxParticles(ParticleSystem particle, int i)
     {
         var main = particle.main;
-        main.maxParticles = 1;
+        main.maxParticles = i;
     }
 
     static void SetMaxParticleSize(ParticleSystem particle)
