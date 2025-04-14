@@ -15,6 +15,7 @@ public enum DisableXYZWChannel
     Z = 3,
     W = 4
 }
+
 public enum XYZWChannel
 {
     X = 0,
@@ -22,6 +23,7 @@ public enum XYZWChannel
     Z = 2,
     W = 3
 }
+
 public enum DisableXYZChannel
 {
     Dissable = 0,
@@ -29,6 +31,7 @@ public enum DisableXYZChannel
     Y = 2,
     Z = 3
 }
+
 public enum XYZChannel
 {
     X = 0,
@@ -40,6 +43,14 @@ public enum ToggleEnum
 {
     Disable = 0,
     Enable = 1
+}
+
+// 定义枚举类型
+public enum SpaceMode
+{
+    法线空间 = 0,
+    物体空间 = 1,
+    世界空间 = 2
 }
 
 public class EffectStandardShaderEditor : ModularShaderEditor
@@ -62,11 +73,13 @@ public class EffectStandardShaderEditor : ModularShaderEditor
     };
 
     public readonly string[] s_BlendeModeNames = Enum.GetNames(typeof(RenderingBlendUtils.BlendMode));
+
     protected override void OnBeforeDefaultGUI(MaterialEditor materialEditor)
     {
-        material.SetShaderPassEnabled("UniversalScreenDistortion",FindProperty("_EnableScreenDistortion").floatValue > 0.5f);
-        material.SetShaderPassEnabled("UniversalForward",FindProperty("_EnableScreenDistortion").floatValue < 0.5f);
-        
+
+        material.SetShaderPassEnabled("UniversalScreenDistortion", FindProperty("_EnableScreenDistortion").floatValue > 0.5f);
+        material.SetShaderPassEnabled("UniversalForward", FindProperty("_EnableScreenDistortion").floatValue < 0.5f);
+
         UpdateRenderState(materialEditor);
         DoPopup(materialEditor, new GUIContent("混合模式"), FindProperty("_BlendMode"), s_BlendeModeNames);
         RenderingBlendUtils.BlendMode blendMode = (RenderingBlendUtils.BlendMode)FindProperty("_BlendMode").floatValue;
@@ -109,16 +122,16 @@ public class EffectStandardShaderEditor : ModularShaderEditor
         {
             // materialEditor.ShaderProperty(FindProperty("_MainAnimationCustomDataChannel01"), "动画依据(U方向)");
             // 正确的转换方式
-            FindProperty("_MainAnimationCustomDataChannel01").floatValue = (float)(int)(DisableXYZWChannel)EditorGUILayout.EnumPopup("动画依据(X方向)", 
+            FindProperty("_MainAnimationCustomDataChannel01").floatValue = (float)(int)(DisableXYZWChannel)EditorGUILayout.EnumPopup("动画依据(X方向)",
                 (DisableXYZWChannel)((int)FindProperty("_MainAnimationCustomDataChannel01").floatValue));
-            FindProperty("_MainAnimationCustomDataChannel02").floatValue = (float)(int)(DisableXYZWChannel)EditorGUILayout.EnumPopup("动画依据(Y方向)", 
+            FindProperty("_MainAnimationCustomDataChannel02").floatValue = (float)(int)(DisableXYZWChannel)EditorGUILayout.EnumPopup("动画依据(Y方向)",
                 (DisableXYZWChannel)((int)FindProperty("_MainAnimationCustomDataChannel02").floatValue));
         }
         else if (FindProperty("_MainAnimationSource").floatValue > 2.5f)
         {
-            FindProperty("_MainAnimationCustomDataChannel01").floatValue = (float)(int)(ToggleEnum)EditorGUILayout.EnumPopup("动画依据(X方向)", 
+            FindProperty("_MainAnimationCustomDataChannel01").floatValue = (float)(int)(ToggleEnum)EditorGUILayout.EnumPopup("动画依据(X方向)",
                 (ToggleEnum)((int)FindProperty("_MainAnimationCustomDataChannel01").floatValue));
-            FindProperty("_MainAnimationCustomDataChannel02").floatValue = (float)(int)(ToggleEnum)EditorGUILayout.EnumPopup("动画依据(Y方向)", 
+            FindProperty("_MainAnimationCustomDataChannel02").floatValue = (float)(int)(ToggleEnum)EditorGUILayout.EnumPopup("动画依据(Y方向)",
                 (ToggleEnum)((int)FindProperty("_MainAnimationCustomDataChannel02").floatValue));
         }
 
@@ -207,7 +220,7 @@ public class EffectStandardShaderEditor : ModularShaderEditor
     private void DrawDissolveModule(MaterialEditor materialEditor)
     {
         // 绘制溶解模块的属性
-        materialEditor.TexturePropertySingleLine(new GUIContent("溶解纹理"), FindProperty("_DissolutionTex"), FindProperty("_DissolutionColor"));
+        materialEditor.TexturePropertySingleLine(new GUIContent("溶解纹理"), FindProperty("_DissolutionTex"), FindProperty("_DissolutionColor"), FindProperty("_DissolutionChannel"));
         DrawRotationSlider("_DissolutionRotationParams", "旋转角度");
         materialEditor.TextureScaleOffsetProperty(FindProperty("_DissolutionTex"));
         materialEditor.ShaderProperty(FindProperty("_DissolutionDirection"), "溶解方向");
@@ -227,33 +240,94 @@ public class EffectStandardShaderEditor : ModularShaderEditor
         DrawFlowIntensityToMultiMap(3);
     }
 
+    private int selectedTab = 0;
+
+    private string[] tabNames = { "纹理扰动", "顶点扰动" };
+
+// 使用示例
+    private int tabIndex = 0;
+
+    GUIContent defaultTab = new GUIContent("Default");
+
     private void DrawFlowModule(MaterialEditor materialEditor)
     {
         // 绘制流动模块的属性
         materialEditor.TexturePropertySingleLine(new GUIContent("扰动纹理"), FindProperty("_FlowTex"));
         materialEditor.TextureScaleOffsetProperty(FindProperty("_FlowTex"));
-        materialEditor.ShaderProperty(FindProperty("_EnableVertexAnimation"), "启用顶点动画");
-        materialEditor.ShaderProperty(FindProperty("_VertexAnimationStrength"), "顶点动画强度");
-        //绘制流动速度属性
-        Vector4 flowSpeed = FindProperty("_FlowSpeed").vectorValue;
-        Vector2 flowSpeed01 = new Vector2(flowSpeed.x, flowSpeed.y);
-        Vector2 flowSpeed02 = new Vector2(flowSpeed.z, flowSpeed.w);
-        flowSpeed01 = EditorGUILayout.Vector2Field("扰动速度01", flowSpeed01);
-        flowSpeed02 = EditorGUILayout.Vector2Field("扰动速度02", flowSpeed02);
-        flowSpeed.x = flowSpeed01.x;
-        flowSpeed.y = flowSpeed01.y;
-        flowSpeed.z = flowSpeed02.x;
-        flowSpeed.w = flowSpeed02.y;
-        FindProperty("_FlowSpeed").vectorValue = flowSpeed;
+        DrawRotationSlider("_FlowRotationParams", "旋转角度");
+        materialEditor.ShaderProperty(FindProperty("_FlowAnimationSource"), "动画依据");
+        if (FindProperty("_FlowAnimationSource").floatValue > 0.0f && FindProperty("_FlowAnimationSource").floatValue < 2.5f)
+        {
+            // materialEditor.ShaderProperty(FindProperty("_MainAnimationCustomDataChannel01"), "动画依据(U方向)");
+            // 正确的转换方式
+            FindProperty("_FlowAnimationCustomDataChannel01").floatValue = (float)(int)(DisableXYZWChannel)EditorGUILayout.EnumPopup("动画依据(X方向)",
+                (DisableXYZWChannel)((int)FindProperty("_FlowAnimationCustomDataChannel01").floatValue));
+            FindProperty("_FlowAnimationCustomDataChannel02").floatValue = (float)(int)(DisableXYZWChannel)EditorGUILayout.EnumPopup("动画依据(Y方向)",
+                (DisableXYZWChannel)((int)FindProperty("_FlowAnimationCustomDataChannel02").floatValue));
+        }
+        else if (FindProperty("_FlowAnimationSource").floatValue > 2.5f)
+        {
+            FindProperty("_FlowAnimationCustomDataChannel01").floatValue = (float)(int)(ToggleEnum)EditorGUILayout.EnumPopup("动画依据(X方向)",
+                (ToggleEnum)((int)FindProperty("_FlowAnimationCustomDataChannel01").floatValue));
+            FindProperty("_FlowAnimationCustomDataChannel02").floatValue = (float)(int)(ToggleEnum)EditorGUILayout.EnumPopup("动画依据(Y方向)",
+                (ToggleEnum)((int)FindProperty("_FlowAnimationCustomDataChannel02").floatValue));
+        }
+
+        EditorGUIHelper.BeginHeaderToggleGrouping("顶点偏移");
+        Vector4 vertexAnimationStrengthPropValue = FindProperty("_VertexAnimationStrength").vectorValue;
+
+
+        Vector3 vertexAnimationStrength = Vector3.zero;
+        float vertexAnimationSpaceMode = 0;
+
+        // 将枚举值转换为 float 值
+        vertexAnimationSpaceMode = (float)(SpaceMode)EditorGUILayout.EnumPopup("偏移空间方向", (SpaceMode)(int)vertexAnimationStrengthPropValue.w);
+
+        materialEditor.ShaderProperty(FindProperty("_VertexAnimationStrengthSource"), "顶点偏移强度依据");
+
+        if (FindProperty("_VertexAnimationStrengthSource").floatValue < 0.5f)
+        {
+            // 绘制 XYZ 分量
+            vertexAnimationStrength = EditorGUILayout.Vector3Field("顶点偏移强度", new Vector3(vertexAnimationStrengthPropValue.x, vertexAnimationStrengthPropValue.y, vertexAnimationStrengthPropValue.z));
+        }
+        else
+        {
+            // materialEditor.ShaderProperty(FindProperty("_MainAnimationCustomDataChannel01"), "动画依据(U方向)");
+            // 正确的转换方式
+            FindProperty("_VertexAnimationStrengthCustomDataChannel01").floatValue = (float)(int)(DisableXYZWChannel)EditorGUILayout.EnumPopup("动画依据(X方向)",
+                (DisableXYZWChannel)((int)FindProperty("_VertexAnimationStrengthCustomDataChannel01").floatValue));
+            FindProperty("_VertexAnimationStrengthCustomDataChannel02").floatValue = (float)(int)(DisableXYZWChannel)EditorGUILayout.EnumPopup("动画依据(Y方向)",
+                (DisableXYZWChannel)((int)FindProperty("_VertexAnimationStrengthCustomDataChannel02").floatValue));
+            FindProperty("_VertexAnimationStrengthCustomDataChannel03").floatValue = (float)(int)(DisableXYZWChannel)EditorGUILayout.EnumPopup("动画依据(Z方向)",
+                (DisableXYZWChannel)((int)FindProperty("_VertexAnimationStrengthCustomDataChannel03").floatValue));
+        }
+
+        // 更新 Vector4 属性
+        FindProperty("_VertexAnimationStrength").vectorValue = new Vector4(vertexAnimationStrength.x, vertexAnimationStrength.y, vertexAnimationStrength.z, vertexAnimationSpaceMode);
+        EditorGUILayout.EndVertical();
     }
 
     private void DrawFresnelModule(MaterialEditor materialEditor)
     {
-        materialEditor.ShaderProperty(FindProperty("_FresnelEdgeMode"), "菲涅尔边缘模式");
-        materialEditor.ShaderProperty(FindProperty("_FresnelInvert"), "菲涅尔反转");
+        // materialEditor.ShaderProperty(FindProperty("_FresnelEdgeMode"), "菲涅尔边缘模式");
+        // materialEditor.ShaderProperty(FindProperty("_FresnelInvert"), "菲涅尔反转");
+        //
+        // materialEditor.ShaderProperty(FindProperty("_FresnelIntensity"), "菲涅尔强度");
+        // materialEditor.ShaderProperty(FindProperty("_FresnelPower"), "菲涅尔Power");
+
+        EditorGUIHelper.BeginHeaderToggleGrouping("菲涅尔颜色区域");
         materialEditor.ShaderProperty(FindProperty("_FresnelColor"), "菲涅尔颜色");
-        materialEditor.ShaderProperty(FindProperty("_FresnelIntensity"), "菲涅尔强度");
-        materialEditor.ShaderProperty(FindProperty("_FresnelPower"), "菲涅尔Power");
+        materialEditor.ShaderProperty(FindProperty("_FresnelColorIntensity"), "菲涅尔颜色强度");
+        materialEditor.ShaderProperty(FindProperty("_FresnelColorSoftnessMin"), "菲涅尔范围Min");
+        materialEditor.ShaderProperty(FindProperty("_FresnelColorSoftnessMax"), "菲涅尔范围Max");
+        EditorGUIHelper.EndHeaderToggleGrouping();
+
+        EditorGUIHelper.BeginHeaderToggleGrouping("菲涅尔透明区域");
+        materialEditor.ShaderProperty(FindProperty("_FresnelAlphaMode"), "菲涅尔透明模式");
+        materialEditor.ShaderProperty(FindProperty("_FresnelAlphaIntensity"), "菲涅尔透明强度");
+        materialEditor.ShaderProperty(FindProperty("_FresnelAlphaSoftnessMin"), "菲涅尔范围Min");
+        materialEditor.ShaderProperty(FindProperty("_FresnelAlphaSoftnessMax"), "菲涅尔范围Max");
+        EditorGUIHelper.EndHeaderToggleGrouping();
     }
 
     private void DrawDepthBlendModule(MaterialEditor materialEditor)
@@ -263,7 +337,7 @@ public class EffectStandardShaderEditor : ModularShaderEditor
 
     private void DrawScreenDistortionModule(MaterialEditor materialEditor)
     {
-        FindProperty("_ScreenDistortionChannel").floatValue = (float)(XYZWChannel)EditorGUILayout.EnumPopup(new GUIContent("扭曲通道","使用当前材质球输出的RGBA做选择"), (XYZWChannel)FindProperty("_ScreenDistortionChannel").floatValue);
+        FindProperty("_ScreenDistortionChannel").floatValue = (float)(XYZWChannel)EditorGUILayout.EnumPopup(new GUIContent("扭曲通道", "使用当前材质球输出的RGBA做选择"), (XYZWChannel)FindProperty("_ScreenDistortionChannel").floatValue);
         materialEditor.ShaderProperty(FindProperty("_ScreenDistortionIntensity"), "热扭曲强度");
     }
 

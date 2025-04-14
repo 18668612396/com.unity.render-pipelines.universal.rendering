@@ -125,7 +125,7 @@ public class ParticleSystemCreator : Editor
     static void SetMaxParticleSize(ParticleSystem particle)
     {
         var renderer = particle.GetComponent<ParticleSystemRenderer>();
-        renderer.maxParticleSize = 1000;
+        renderer.maxParticleSize = 10;
     }
 
     static void DisableShapeModule(ParticleSystem particle)

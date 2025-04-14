@@ -4,7 +4,6 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
 
-
 CBUFFER_START(UnityPerMaterial)
     int _BlendMode;
     float _Cutoff;
@@ -53,14 +52,28 @@ CBUFFER_START(UnityPerMaterial)
 
     //flow
     float4 _FlowTex_ST;
-    float4 _FlowSpeed;
     float4 _FlowIntensityToMultiMap; //x :混合main,y：混合second, z:混合mask，w：混合dissolution
+    int _FlowAnimationSource;
+    int _FlowAnimationCustomDataChannel01;
+    int _FlowAnimationCustomDataChannel02;
     // float _FlowIntensity;
     //fresnel
     float _EnableFresnel;
     float _EnableFresnelDebuger;
-    int _FresnelEdgeMode;
     half4 _FresnelColor;
+    half _FresnelColorIntensity;
+    half _FresnelColorPower;
+    half _FresnelAlphaMode;
+    half _FresnelAlphaIntensity;
+    half _FresnelAlphaPower;
+    half _FresnelColorSoftnessMin;
+    half _FresnelColorSoftnessMax;
+    half _FresnelAlphaSoftnessMin;
+    half _FresnelAlphaSoftnessMax;
+
+
+    int _FresnelEdgeMode;
+
     float _FresnelIntensity;
     float _FresnelPower;
     float _FresnelInvert;
@@ -81,8 +94,7 @@ CBUFFER_START(UnityPerMaterial)
     int _DissolutionSource;
     float _DissolutionThreshold;
     int _DissolutionCustomDataChannel;
-    float _EnableVertexAnimation;
-    float _VertexAnimationStrength;
+    float4 _VertexAnimationStrength;
     int _DissolutionBlendAlpha;
     //屏幕扭曲
     int _ScreenDistortionChannel;
@@ -102,6 +114,12 @@ CBUFFER_START(UnityPerMaterial)
     float _EnableMaskDebuger;
     float _EnableDissolution;
     float _EnableFlow;
+    int _EnableFlowDebuger;
+    float4 _FlowRotationParams;
+    int _VertexAnimationStrengthSource;
+    int _VertexAnimationStrengthCustomDataChannel01;
+    int _VertexAnimationStrengthCustomDataChannel02;
+    int _VertexAnimationStrengthCustomDataChannel03;
 CBUFFER_END
 
 TEXTURE2D(_MainTex);

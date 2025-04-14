@@ -54,12 +54,18 @@ Shader "XEffect/EffectStandard"
         _RampIntensity("Ramp Intensity", Range(0, 100)) = 1
         //Flow
         [Toggle(ENABLE_FLOW_ON)] _EnableFlow ("Flow On", Float) = 0
+        _EnableFlowDebuger("Enable Flow Debuger", Float) = 0
         _FlowTex("FlowTex", 2D) = "white" {}
-        _FlowSpeed("Flow Params", Vector) = (1, 0, 0, 1)//xy 第一层，zw 第二层
         _FlowIntensityToMultiMap("Flow Intensity To MultiMap",Vector) = (1,1,1,1)
-        [Toggle]_EnableVertexAnimation("Enable Vertex Animation", Float) = 0//开启顶点动画
-        _VertexAnimationStrength("Enable Vertex Animation Strength", Range(0,1)) = 0//开启顶点动画强度
-
+        _FlowRotationParams ("_FlowRotationParams",Vector) = (1,0,0,0)
+        [Enum(Disable, 0, CustomData01, 1, CustomData02, 2,Time,3)]_FlowAnimationSource("Flow Animation Source", Int) = 0//根据什么来动画，0：时间，1：CustomData01，3：CustomData02
+        [Enum(Disable,0,X, 1, Y, 2, Z, 3, W, 4)]_FlowAnimationCustomDataChannel01("Flow CustomData Channel01", Int) = 0//U方向通道选择
+        [Enum(Disable,0,X, 1, Y, 2, Z, 3, W, 4)]_FlowAnimationCustomDataChannel02("Flow CustomData Channel02", Int) = 0//V方向通道选择
+        [Enum(Properties, 0, CustomData01, 1, CustomData02, 2)]_VertexAnimationStrengthSource("Flow Animation Source", Int) = 0//根据什么来动画，0：时间，1：CustomData01，3：CustomData02
+        [Enum(Disable,0,X, 1, Y, 2, Z, 3, W, 4)]_VertexAnimationStrengthCustomDataChannel01("Flow CustomData Channel01", Int) = 0//X方向通道选择
+        [Enum(Disable,0,X, 1, Y, 2, Z, 3, W, 4)]_VertexAnimationStrengthCustomDataChannel02("Flow CustomData Channel02", Int) = 0//Y方向通道选择
+        [Enum(Disable,0,X, 1, Y, 2, Z, 3, W, 4)]_VertexAnimationStrengthCustomDataChannel03("Flow CustomData Channel02", Int) = 0//Z方向通道选择
+        _VertexAnimationStrength("Enable Vertex Animation Strength", Vector) = (0, 0, 0, 0)//XYZ : 自身空间偏移，W:法线朝向偏移
         //Mask
         [Toggle(ENABLE_MASK_ON)] _EnableMask ("Mask On", Float) = 0
         [Toggle]_EnableMaskDebuger("Enable Mask Debuger", Float) = 0
@@ -89,11 +95,19 @@ Shader "XEffect/EffectStandard"
         //fresnel
         [Toggle] _EnableFresnel("Enable Fresnel", Float) = 0
         [Toggle] _EnableFresnelDebuger("Enable Fresnel Debuger", Float) = 0
-        [Toggle] _FresnelInvert("Fresnel Invert", Float) = 0
-        [Enum(HardEdge, 0, SoftEdge, 1)] _FresnelEdgeMode("Fresnel Edge Type", Float) = 0
-        _FresnelColor("Fresnel Color", Color) = (1,1,1,1)
-        _FresnelIntensity("Fresnel Intensity", Range(0, 10)) = 1
-        _FresnelPower("Fresnel Power", Range(0, 10)) = 1
+        [HDR]_FresnelColor("Fresnel Color", Color) = (1,1,1,1)
+        _FresnelColorIntensity("Fresnel Color Intensity", Range(0, 1)) = 1
+        _FresnelColorPower("Fresnel Color Power", Range(0, 10)) = 1
+        _FresnelColorSoftnessMin("Fresnel Color Softness Min", Range(0, 1)) = 0
+        _FresnelColorSoftnessMax("Fresnel Color Softness Max", Range(0, 1)) = 1
+
+        [Enum(Decrease, 0, Increase, 1)] _FresnelAlphaMode("Fresnel Alpha Mode", Float) = 0
+        [Toggle]_EnableFresnelAlpha("Enable Fresnel Alpha", float) = 1
+        _FresnelAlphaIntensity("Fresnel Alpha Intensity", Range(0, 1)) = 1
+        _FresnelAlphaPower("Fresnel Alpha Power", Range(0, 10)) = 1
+        _FresnelAlphaSoftnessMin("Fresnel Alpha Softness Min", Range(0, 1)) = 0
+        _FresnelAlphaSoftnessMax("Fresnel Alpha Softness Max", Range(0, 1)) = 1
+
         //屏幕扭曲
         [Toggle]_EnableScreenDistortion("Enable Screen Distortion", Float) = 0
         _ScreenDistortionChannel("Screen Distortion Channel", Float) = 3//根据当前材质球输出的RGBA做选择

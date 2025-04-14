@@ -19,7 +19,7 @@ struct Varyings
     float4 color : COLOR;
     float2 mask_uv : MASK_UV;
     float2 dissolution_uv : DISSOLUTION_UV;
-    float4 flow_uv : FLOW_UV;
+    float2 flow_uv : FLOW_UV;
     float2 normal_uv : NORMAL_UV;
     float4 custom01 : TEXCOORD01;
     float4 custom02 : TEXCOORD02;
@@ -45,28 +45,56 @@ Varyings Vertex(Attributes input)
     output.mask_uv = RotateTextureUV(TRANSFORM_TEX(input.texcoord0, _MaskTex), _MaskRotationParams) + maskAnimation;
     output.dissolution_uv = RotateTextureUV(TRANSFORM_TEX(input.texcoord0, _DissolutionTex), _DissolutionRotationParams);
     //flow
-    output.flow_uv = input.texcoord0.xyxy * _FlowTex_ST.xyxy + _FlowTex_ST.zwzw + _FlowSpeed * _Time.y;
-    float2 flowVector = float2(0.0, 0.0);
+    float2 flowAnimation = ApplyUVAnimation(_FlowAnimationSource, input.custom01, _FlowAnimationCustomDataChannel01, input.custom02, _FlowAnimationCustomDataChannel02, _FlowTex_ST);
+    output.flow_uv = RotateTextureUV(TRANSFORM_TEX(input.texcoord0, _FlowTex), _FlowRotationParams) + flowAnimation;
+
+    float flowVector = 0;
     if (_EnableFlow)
     {
-        half2 sample_flow01 = SAMPLE_TEXTURE2D_LOD(_FlowTex, sampler_FlowTex, output.flow_uv.xy, 0).xy;
-        half2 sample_flow02 = SAMPLE_TEXTURE2D_LOD(_FlowTex, sampler_FlowTex, output.flow_uv.zw, 0).xy;
-        half2 sample_flow = sample_flow01 + sample_flow02;
-        flowVector = sample_flow - 1.0;
+        half sample_flow01 = SAMPLE_TEXTURE2D_LOD(_FlowTex, sampler_FlowTex, output.flow_uv.xy, 0).x;
+        flowVector = sample_flow01 * 2 - 1;
     }
-    float3 positionOS = input.positionOS.xyz + input.normalOS * flowVector.x * _VertexAnimationStrength * _EnableVertexAnimation;
+    float3 positionOS = input.positionOS.xyz;
+    float4 vertexAnimationStrength = _VertexAnimationStrength;
+    if (_VertexAnimationStrengthSource > 0.5 && _VertexAnimationStrengthSource < 1.5)
+    {
+        vertexAnimationStrength.x = input.custom01[_VertexAnimationStrengthCustomDataChannel01 - 1];
+        vertexAnimationStrength.y = input.custom01[_VertexAnimationStrengthCustomDataChannel02 - 1];
+        vertexAnimationStrength.z = input.custom01[_VertexAnimationStrengthCustomDataChannel03 - 1];
+    }
+    else if (_VertexAnimationStrengthSource > 1.5)
+    {
+        vertexAnimationStrength.x = input.custom02[_VertexAnimationStrengthCustomDataChannel01 - 1];
+        vertexAnimationStrength.y = input.custom02[_VertexAnimationStrengthCustomDataChannel02 - 1];
+        vertexAnimationStrength.z = input.custom02[_VertexAnimationStrengthCustomDataChannel03 - +1];
+    }
+
+    if (vertexAnimationStrength.w < 0.5) //小于0.5为法线
+    {
+        positionOS += input.normalOS.xyz * vertexAnimationStrength * flowVector;
+    }
+    else if (vertexAnimationStrength.w > 0.5 && vertexAnimationStrength.w < 1.5) // 为1时，则为自身空间坐标
+    {
+        positionOS += vertexAnimationStrength * flowVector;
+    }
     //normal
     VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
     VertexPositionInputs vertexInput = GetVertexPositionInputs(positionOS);
-    output.tangentWS = float4(normalInput.tangentWS, vertexInput.positionWS.x);
-    output.bitangentWS = float4(normalInput.bitangentWS, vertexInput.positionWS.y);
-    output.normalWS = float4(normalInput.normalWS, vertexInput.positionWS.z);
+    float3 positionWS = vertexInput.positionWS;
+    if (vertexAnimationStrength.w > 1.5 && vertexAnimationStrength.w < 2.5) //为2时，则为世界空间坐标
+    {
+        positionWS += vertexAnimationStrength * flowVector;
+    }
+
+    output.tangentWS = float4(normalInput.tangentWS, positionWS.x);
+    output.bitangentWS = float4(normalInput.bitangentWS, positionWS.y);
+    output.normalWS = float4(normalInput.normalWS, positionWS.z);
     output.normal_uv = TRANSFORM_TEX(input.texcoord0, _NormalMap);
 
     output.color = input.Color;
     output.custom01 = input.custom01;
     output.custom02 = input.custom02;
-    output.positionCS = vertexInput.positionCS;
+    output.positionCS = TransformWorldToHClip(positionWS);
     output.screenPos = ComputeScreenPos(output.positionCS);
     output.base_uv = input.texcoord0.xy;
 
@@ -93,10 +121,13 @@ half4 Fragment(Varyings input) : SV_Target
     float2 flowVector = float2(0.0, 0.0);
     if (_EnableFlow > 0.5)
     {
-        half2 sample_flow01 = SAMPLE_TEXTURE2D(_FlowTex, sampler_FlowTex, input.flow_uv.xy).xy;
-        half2 sample_flow02 = SAMPLE_TEXTURE2D(_FlowTex, sampler_FlowTex, input.flow_uv.zw).xy;
-        half2 sample_flow = sample_flow01 + sample_flow02;
+        half sample_flow01 = SAMPLE_TEXTURE2D(_FlowTex, sampler_FlowTex, input.flow_uv.xy).x;
+        half sample_flow = sample_flow01;
         flowVector = sample_flow - 1.0;
+        if (_EnableFlowDebuger)
+        {
+            return half4(sample_flow01.xxx, 1);
+        }
     }
     //main
     float2 main_uv = ApplyFlowDistortion(input.uv.xy, flowVector, _FlowIntensityToMultiMap.x);
@@ -152,6 +183,7 @@ half4 Fragment(Varyings input) : SV_Target
             secondAlpha = secondColor.w;
         }
         finalRGB.rgb = lerp(finalRGB.rgb, secondColor, secondAlpha);
+        finalAlpha = lerp(finalAlpha, secondAlpha, secondAlpha);
     }
 
     if (_EnableRamp > 0.5)
@@ -184,24 +216,21 @@ half4 Fragment(Varyings input) : SV_Target
         float3 positionWS = float3(input.tangentWS.w, input.bitangentWS.w, input.normalWS.w);
         float3 viewDir = normalize(_WorldSpaceCameraPos - positionWS);
         float fresnel = saturate(dot(viewDir, input.normalWS.xyz));
-        if (_FresnelInvert)
-        {
-            fresnel = 1 - fresnel;
-        }
-        half4 fresnelColor = saturate(pow(fresnel, _FresnelPower)) * _FresnelColor * _FresnelIntensity;
-        finalRGB += fresnelColor.rgb;
-        if (_FresnelEdgeMode == 0)
-        {
-            finalAlpha += fresnelColor.a;
-        }
-        else
-        {
-            finalAlpha *= fresnelColor.a;
-        }
+
+        half4 fresnelIntensity = half4(_FresnelColorIntensity.xxx,_FresnelAlphaIntensity);
+        half4 fresnelSoftnessMin = half4(_FresnelColorSoftnessMin.xxx, _FresnelAlphaSoftnessMin);
+        half4 fresnelSoftnessMax = half4(_FresnelColorSoftnessMax.xxx, _FresnelAlphaSoftnessMax);
+        half4 finalFresnel =  smoothstep(fresnelSoftnessMin, fresnelSoftnessMax, fresnel) * fresnelIntensity;
+        half4 fresnelColor = half4(_FresnelColor.rgb,_FresnelAlphaMode);
+        half4 finalColor = half4(finalRGB,finalAlpha);
+        finalColor = lerp(finalColor, fresnelColor, finalFresnel);
+
+        finalRGB = finalColor.rgb;
+        finalAlpha = finalColor.a;
 
         if (_EnableFresnelDebuger > 0.5)
         {
-            return half4(saturate(pow(fresnel, _FresnelPower)).xxx, 1);
+            return finalFresnel;
         }
     }
 

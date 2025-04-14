@@ -72,9 +72,9 @@ using UnityEditor.Rendering;
             //做一些初始化工作
             if (!initialized && material != null)
             {
-                InitializeModuleStates();
                 initialized = true;
             }
+            InitializeModuleStates();
             // 开始水平布局
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space(-15);
