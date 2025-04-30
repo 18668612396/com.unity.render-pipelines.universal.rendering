@@ -12,7 +12,7 @@ Shader "XEffect/EffectStandard"
         //Main
         _MainTex("MainTex", 2D) = "white" {}
         _MainTexColor("Color", Color) = (1,1,1,1)
-        _MainTexIntensity("Intensity", Range(0, 10)) = 1
+        _MainTexIntensity("Intensity", Range(0, 50)) = 1
         [Toggle]_EnableMainTexColorAddition("Enable MainTex Color Addition", Float) = 0
         [Enum(X, 0, Y, 1, Z, 2, W, 3)]_MainTexColorRampChannel("MainTex Color Ramp Channel", Float) = 0
         [HDR]_MainTexColorAddition("Color Addition", Color) = (0,0,0,0)
@@ -20,6 +20,7 @@ Shader "XEffect/EffectStandard"
         [Enum(Disable, 0, CustomData01, 1, CustomData02, 2,Time,3)]_MainAnimationSource("Mask Animation Source", Int) = 0//根据什么来动画，0：不动，1：CustomData01，3：CustomData02
         [Enum(Disable,0,X, 1, Y, 2, Z, 3, W, 4)]_MainAnimationCustomDataChannel01("Mask CustomData Channel01", Int) = 0//U方向通道选择
         [Enum(Disable,0,X, 1, Y, 2, Z, 3, W, 4)]_MainAnimationCustomDataChannel02("Mask CustomData Channel02", Int) = 0//V方向通道选择
+        _MainAnimationChannelAndSpeed("Main Animation Channel And Speed", Vector) = (0, 0, 0, 0)//X: X方向通道选择，Y: Y方向通道选择，Z: X方向速度，W: Y方向速度
         //Normal
         [Toggle(ENABLE_NORMALMAP_ON)] _EnableNormalMap ("NormalMap On", Float) = 0
         _NormalMap("NormalMap", 2D) = "bump" {}
@@ -28,6 +29,7 @@ Shader "XEffect/EffectStandard"
         _ShadowColor("Shadow Color", Color) = (0,0,0,1)
         //Secondary
         [Toggle(ENABLE_SECOND_ON)] _EnableSecond ("Second On", Float) = 0
+        [Toggle]_EnableMultiMainAlpha("Enable Multi Main Alpha", Float) = 0//是否启用主纹理的透明度乘以第二纹理的透明度
         _SecondTex("SecondTex", 2D) = "white" {}
         [HDR]_SecondColor01("SecondColor01", Color) = (1,1,1,1)
         [HDR]_SecondColor02("SecondColor02", Color) = (1,1,1,1)
@@ -49,6 +51,7 @@ Shader "XEffect/EffectStandard"
         //Ramp
         [Toggle(ENABLE_RAMP_ON)] _EnableRamp ("Ramp On", Float) = 0
         _EnableRampDebuger("Enable Ramp Debuger", Float) = 0
+        [Enum(UV,0,R, 1,G,2,B,3,A,4)]_RampMapSource("Ramp Channel", Float) = 0
         _RampMap("RampMap", 2D) = "white" {}
         _RampMapRotationParams("_SecondRotationParams",Vector) = (1,0,0,0)
         _RampIntensity("Ramp Intensity", Range(0, 100)) = 1
@@ -57,6 +60,7 @@ Shader "XEffect/EffectStandard"
         _EnableFlowDebuger("Enable Flow Debuger", Float) = 0
         _FlowTex("FlowTex", 2D) = "white" {}
         _FlowIntensityToMultiMap("Flow Intensity To MultiMap",Vector) = (1,1,1,1)
+        [Enum(X, 0, Y, 1, Z, 2, W, 3)]_FlowTexChannel("Flow Channel", Float) = 3//根据当前材质球输出的RGBA做选择
         _FlowRotationParams ("_FlowRotationParams",Vector) = (1,0,0,0)
         [Enum(Disable, 0, CustomData01, 1, CustomData02, 2,Time,3)]_FlowAnimationSource("Flow Animation Source", Int) = 0//根据什么来动画，0：时间，1：CustomData01，3：CustomData02
         [Enum(Disable,0,X, 1, Y, 2, Z, 3, W, 4)]_FlowAnimationCustomDataChannel01("Flow CustomData Channel01", Int) = 0//U方向通道选择
@@ -70,6 +74,8 @@ Shader "XEffect/EffectStandard"
         [Toggle(ENABLE_MASK_ON)] _EnableMask ("Mask On", Float) = 0
         [Toggle]_EnableMaskDebuger("Enable Mask Debuger", Float) = 0
         _MaskTex("MaskTex", 2D) = "white" {}
+        _MaskIntensity("Mask Intensity", Range(0, 1)) = 1
+        [Toggle]_InvertMask("Invert Mask", Float) = 0
         _MaskRotationParams("Mask Rotation Params", Vector) = (1, 0, 0, 0)
         [Enum(R, 0, G, 1, B, 2, A, 3)]_MaskAlphaChannel("Mask Alpha Channel", Float) = 0
         [Enum(Disable, 0, CustomData01, 1, CustomData02, 2,Time,3)]_MaskAnimationSource("Mask Animation Source", Int) = 0//根据什么来动画，0：时间，1：CustomData01，3：CustomData02
@@ -91,10 +97,13 @@ Shader "XEffect/EffectStandard"
         _DissolutionRotationParams("Dissolution Rotation Params", Vector) = (1, 0, 0, 0)
         //Depth
         [Toggle(ENABLE_DEPTHBLEND_ON)] _EnableDepthBlend ("Dissolution On", Float) = 0
+        [Enum(SoftParticle, 0, HardParticle, 1)] _DepthBlendMode("Depth Blend Mode", Float) = 0
+        [HDR]_DepthBlendColor("Depth Blend Color", Color) = (1,1,1,1)
         _IntersectionSoftness ("Intersection Softness", Range(0, 1)) = 0.1
         //fresnel
         [Toggle] _EnableFresnel("Enable Fresnel", Float) = 0
         [Toggle] _EnableFresnelDebuger("Enable Fresnel Debuger", Float) = 0
+        _FresnelPower("Fresnel Power", Range(0, 10)) = 1
         [HDR]_FresnelColor("Fresnel Color", Color) = (1,1,1,1)
         _FresnelColorIntensity("Fresnel Color Intensity", Range(0, 1)) = 1
         _FresnelColorPower("Fresnel Color Power", Range(0, 10)) = 1
@@ -110,8 +119,9 @@ Shader "XEffect/EffectStandard"
 
         //屏幕扭曲
         [Toggle]_EnableScreenDistortion("Enable Screen Distortion", Float) = 0
+        [Toggle] _EnableScreenDistortionNormal("Enable Screen Distortion Normal", Float) = 0
         _ScreenDistortionChannel("Screen Distortion Channel", Float) = 3//根据当前材质球输出的RGBA做选择
-        _ScreenDistortionIntensity("Screen Distortion Intensity", Range(0, 10)) = 0
+        _ScreenDistortionIntensity("Screen Distortion Intensity", Range(0, 1)) = 0.5
         //渲染状态，通用
         [Enum()]_BlendMode("BlendMode", Float) = 0
         [Enum(UnityEngine.Rendering.CompareFunction)]_ZTest("ZTest", Float) = 4.0
@@ -183,11 +193,11 @@ Shader "XEffect/EffectStandard"
                 "LightMode" = "UniversalScreenDistortion"
             }
 
-            Blend [_SrcBlend] [_DstBlend], [_SrcBlendA] [_DstBlendA]
-            BlendOp Add
-            ZTest [_ZTest]
-            ZWrite [_ZWrite]
-            Cull [_CullMode]
+//            Blend [_SrcBlend] [_DstBlend], [_SrcBlendA] [_DstBlendA]
+//            BlendOp Add
+//            ZTest [_ZTest]
+//            ZWrite [_ZWrite]
+//            Cull [_CullMode]
             HLSLPROGRAM
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"

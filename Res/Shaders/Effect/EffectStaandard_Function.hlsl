@@ -23,7 +23,11 @@ float2 ApplyUVAnimation(int animationSource, half4 custom01, int channel01, half
     }
     else if (animationSource == 3)
     {
-        mainAnimation = _Time.y * _ST.zw * min(float2(channel01, channel02), 1);
+        //这段代码是可以将UV限制在 -1到1之间，从而实现一个贴图的完整流动，当贴图为clamp的时候，会从一边完整的走到另一边，当贴图为repeat的时候，则跟之前没有任何区别
+        // float2 speed = _ST.zw * min(float2(channel01, channel02), 1);
+        // float2 result = sign(speed) * (frac(_Time.y * abs(speed)) * 2.0 - 1.0) * _ST.xy;
+        // mainAnimation = result;
+        mainAnimation = frac(_ST.zw * _Time.y) * min(float2(channel01, channel02), 1);
     }
     return mainAnimation;
 }

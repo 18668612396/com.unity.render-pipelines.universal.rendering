@@ -22,10 +22,12 @@ CBUFFER_START(UnityPerMaterial)
     int _MainAnimationSource;
     int _MainAnimationCustomDataChannel01;
     int _MainAnimationCustomDataChannel02;
+    float4 _MainAnimationChannelAndSpeed;
     float _EnableMainTexColorAddition;
     int _MainTexColorRampChannel;
     float4 _MainTexColorAddition;
     //second
+    int _EnableMultiMainAlpha;
     float _EnableSecondGradient;
     int _SecondGradientChannel;
     float4 _SecondColor01;
@@ -78,6 +80,8 @@ CBUFFER_START(UnityPerMaterial)
     float _FresnelPower;
     float _FresnelInvert;
     //mask
+    float _MaskIntensity;
+    int _InvertMask;
     int _MaskAlphaChannel;
     int _MaskAnimationSource;
     float4 _MaskTex_ST;
@@ -102,9 +106,12 @@ CBUFFER_START(UnityPerMaterial)
     float _ScreenDistortionIntensity;
     //depth blend
     float _EnableDepthBlend;
+    int _DepthBlendMode;
+    float4 _DepthBlendColor;
     float _IntersectionSoftness;
     //Ramp
     float _EnableRamp;
+    int _RampMapSource;
     float _EnableRampDebuger;
     float4 _RampMapRotationParams;
     float _RampIntensity;
@@ -116,10 +123,12 @@ CBUFFER_START(UnityPerMaterial)
     float _EnableFlow;
     int _EnableFlowDebuger;
     float4 _FlowRotationParams;
+    int _FlowTexChannel;
     int _VertexAnimationStrengthSource;
     int _VertexAnimationStrengthCustomDataChannel01;
     int _VertexAnimationStrengthCustomDataChannel02;
     int _VertexAnimationStrengthCustomDataChannel03;
+    int _EnableScreenDistortionNormal;
 CBUFFER_END
 
 TEXTURE2D(_MainTex);

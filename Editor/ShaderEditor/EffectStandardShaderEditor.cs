@@ -76,7 +76,6 @@ public class EffectStandardShaderEditor : ModularShaderEditor
 
     protected override void OnBeforeDefaultGUI(MaterialEditor materialEditor)
     {
-
         material.SetShaderPassEnabled("UniversalScreenDistortion", FindProperty("_EnableScreenDistortion").floatValue > 0.5f);
         material.SetShaderPassEnabled("UniversalForward", FindProperty("_EnableScreenDistortion").floatValue < 0.5f);
 
@@ -143,16 +142,8 @@ public class EffectStandardShaderEditor : ModularShaderEditor
         // 临时禁用材质编辑器中的锁功能
         EditorGUIUtility.labelWidth += 16; // 增加标签宽度覆盖锁图标的位置
         // 绘制第二纹理模块的属性
-        materialEditor.ShaderProperty(FindProperty("_EnableSecondGradient"), "启用次渐变");
-        if (FindProperty("_EnableSecondGradient").floatValue > 0.5f)
-        {
-            materialEditor.TexturePropertySingleLine(new GUIContent("次纹理"), FindProperty("_SecondTex"), FindProperty("_SecondColor01"), FindProperty("_SecondColor02"));
-            materialEditor.ShaderProperty(FindProperty("_SecondGradientChannel"), "渐变通道");
-        }
-        else
-        {
-            materialEditor.TexturePropertySingleLine(new GUIContent("次纹理"), FindProperty("_SecondTex"), FindProperty("_SecondColor01"));
-        }
+        materialEditor.ShaderProperty(FindProperty("_EnableMultiMainAlpha"), "启用主纹理Alpha叠加");
+        materialEditor.TexturePropertySingleLine(new GUIContent("次纹理"), FindProperty("_SecondTex"), FindProperty("_SecondColor01"));
 
         DrawRotationSlider("_SecondRotationParams", "旋转角度");
         materialEditor.TextureScaleOffsetProperty(FindProperty("_SecondTex"));
@@ -189,6 +180,7 @@ public class EffectStandardShaderEditor : ModularShaderEditor
     private void DrawRampModule(MaterialEditor materialEditor)
     {
         materialEditor.TexturePropertySingleLine(new GUIContent("映射贴图"), FindProperty("_RampMap"), FindProperty("_RampIntensity"));
+        materialEditor.ShaderProperty(FindProperty("_RampMapSource"), "映射依据");
         DrawRotationSlider("_RampMapRotationParams", "旋转角度");
     }
 
@@ -203,15 +195,23 @@ public class EffectStandardShaderEditor : ModularShaderEditor
     private void DrawMaskModule(MaterialEditor materialEditor)
     {
         // 绘制遮罩模块的属性
-        materialEditor.TexturePropertySingleLine(new GUIContent("遮罩纹理"), FindProperty("_MaskTex"), FindProperty("_MaskAlphaChannel"));
+        materialEditor.TexturePropertySingleLine(new GUIContent("遮罩纹理"), FindProperty("_MaskTex"), FindProperty("_MaskIntensity"), FindProperty("_MaskAlphaChannel"));
+        materialEditor.ShaderProperty(FindProperty("_InvertMask"), "遮罩反转");
         DrawRotationSlider("_MaskRotationParams", "旋转角度");
         materialEditor.TextureScaleOffsetProperty(FindProperty("_MaskTex"));
 
         materialEditor.ShaderProperty(FindProperty("_MaskAnimationSource"), "遮罩动画依据");
-        if (FindProperty("_MaskAnimationSource").floatValue > 0.0f)
+        if (FindProperty("_MaskAnimationSource").floatValue > 0.0f && FindProperty("_MaskAnimationSource").floatValue < 2.5f)
         {
             materialEditor.ShaderProperty(FindProperty("_MaskAnimationCustomDataChannel01"), "动画依据(U方向)");
             materialEditor.ShaderProperty(FindProperty("_MaskAnimationCustomDataChannel02"), "动画依据(V方向)");
+        }
+        else if (FindProperty("_MaskAnimationSource").floatValue > 2.5f)
+        {
+            FindProperty("_MaskAnimationCustomDataChannel01").floatValue = (float)(int)(ToggleEnum)EditorGUILayout.EnumPopup("动画依据(X方向)",
+                (ToggleEnum)((int)FindProperty("_MaskAnimationCustomDataChannel01").floatValue));
+            FindProperty("_MaskAnimationCustomDataChannel02").floatValue = (float)(int)(ToggleEnum)EditorGUILayout.EnumPopup("动画依据(Y方向)",
+                (ToggleEnum)((int)FindProperty("_MaskAnimationCustomDataChannel02").floatValue));
         }
 
         DrawFlowIntensityToMultiMap(2);
@@ -252,7 +252,7 @@ public class EffectStandardShaderEditor : ModularShaderEditor
     private void DrawFlowModule(MaterialEditor materialEditor)
     {
         // 绘制流动模块的属性
-        materialEditor.TexturePropertySingleLine(new GUIContent("扰动纹理"), FindProperty("_FlowTex"));
+        materialEditor.TexturePropertySingleLine(new GUIContent("扰动纹理"), FindProperty("_FlowTex"), FindProperty("_FlowTexChannel"));
         materialEditor.TextureScaleOffsetProperty(FindProperty("_FlowTex"));
         DrawRotationSlider("_FlowRotationParams", "旋转角度");
         materialEditor.ShaderProperty(FindProperty("_FlowAnimationSource"), "动画依据");
@@ -314,7 +314,7 @@ public class EffectStandardShaderEditor : ModularShaderEditor
         //
         // materialEditor.ShaderProperty(FindProperty("_FresnelIntensity"), "菲涅尔强度");
         // materialEditor.ShaderProperty(FindProperty("_FresnelPower"), "菲涅尔Power");
-
+        materialEditor.ShaderProperty(FindProperty("_FresnelPower"), "菲涅尔Power");
         EditorGUIHelper.BeginHeaderToggleGrouping("菲涅尔颜色区域");
         materialEditor.ShaderProperty(FindProperty("_FresnelColor"), "菲涅尔颜色");
         materialEditor.ShaderProperty(FindProperty("_FresnelColorIntensity"), "菲涅尔颜色强度");
@@ -332,12 +332,19 @@ public class EffectStandardShaderEditor : ModularShaderEditor
 
     private void DrawDepthBlendModule(MaterialEditor materialEditor)
     {
+        materialEditor.ShaderProperty(FindProperty("_DepthBlendMode"), "深度混合模式");
+        if (FindProperty("_DepthBlendMode").floatValue > 0.5f)
+        {
+            materialEditor.ShaderProperty(FindProperty("_DepthBlendColor"), "深度混合颜色");
+        }
+
         materialEditor.ShaderProperty(FindProperty("_IntersectionSoftness"), "交叉软边度");
     }
 
     private void DrawScreenDistortionModule(MaterialEditor materialEditor)
     {
         FindProperty("_ScreenDistortionChannel").floatValue = (float)(XYZWChannel)EditorGUILayout.EnumPopup(new GUIContent("扭曲通道", "使用当前材质球输出的RGBA做选择"), (XYZWChannel)FindProperty("_ScreenDistortionChannel").floatValue);
+        materialEditor.ShaderProperty(FindProperty("_EnableScreenDistortionNormal"), "扭曲法线");
         materialEditor.ShaderProperty(FindProperty("_ScreenDistortionIntensity"), "热扭曲强度");
     }
 
@@ -429,11 +436,11 @@ public class EffectStandardShaderEditor : ModularShaderEditor
             //     mat.SetOverrideTag("RenderType", "TransparentCutout");
             // }
             // else
-            {
-                renderQueue = (int)RenderQueue.Geometry;
-                mat.SetOverrideTag("RenderType", "Opaque");
-            }
-
+            // {
+            //     renderQueue = (int)RenderQueue.Geometry;
+            //     mat.SetOverrideTag("RenderType", "Opaque");
+            // }
+            //
             RenderingBlendUtils.CalculateRenderBlendMode(RenderingBlendUtils.BlendMode.Replace,
                 out var src, out var dst, out var srcA, out var dstA);
             FindProperty("_SrcBlend").floatValue = (float)src;

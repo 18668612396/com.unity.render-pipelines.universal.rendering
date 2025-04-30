@@ -105,6 +105,7 @@ Varyings Vertex(Attributes input)
 
 half4 Fragment(Varyings input) : SV_Target
 {
+
     half3 finalRGB = 0;
     half finalAlpha = 1;
 
@@ -121,12 +122,11 @@ half4 Fragment(Varyings input) : SV_Target
     float2 flowVector = float2(0.0, 0.0);
     if (_EnableFlow > 0.5)
     {
-        half sample_flow01 = SAMPLE_TEXTURE2D(_FlowTex, sampler_FlowTex, input.flow_uv.xy).x;
-        half sample_flow = sample_flow01;
+        half sample_flow = SAMPLE_TEXTURE2D(_FlowTex, sampler_FlowTex, input.flow_uv.xy)[_FlowTexChannel];
         flowVector = sample_flow - 1.0;
         if (_EnableFlowDebuger)
         {
-            return half4(sample_flow01.xxx, 1);
+            return half4(sample_flow.xxx, 1);
         }
     }
     //main
@@ -180,15 +180,28 @@ half4 Fragment(Varyings input) : SV_Target
         }
         else
         {
-            secondAlpha = secondColor.w;
+            secondAlpha = secondColor.a;
         }
-        finalRGB.rgb = lerp(finalRGB.rgb, secondColor, secondAlpha);
-        finalAlpha = lerp(finalAlpha, secondAlpha, secondAlpha);
+        finalRGB.rgb = lerp(finalRGB.rgb, secondColor, secondAlpha * input.color.a);
+        if (_EnableMultiMainAlpha)
+        {
+            // finalAlpha = finalAlpha * secondAlpha;
+        }
+        else
+        {
+            finalAlpha = lerp(finalAlpha, secondColor.a, secondAlpha);
+        }
     }
 
     if (_EnableRamp > 0.5)
     {
-        half4 sample_ramp = SAMPLE_TEXTURE2D(_RampMap, sampler_RampMap, input.ramp_uv);
+        float2 ramp_uv = input.ramp_uv;
+        if (_RampMapSource > 0.5)
+        {
+            float4 source = float4(finalRGB,finalAlpha);
+            ramp_uv = float2(source[_RampMapSource - 1] , 0.5);
+        }
+        half4 sample_ramp = SAMPLE_TEXTURE2D(_RampMap, sampler_RampMap, ramp_uv);
         finalRGB.rgb = finalRGB.rgb * sample_ramp.rgb * _RampIntensity;
         finalAlpha *= sample_ramp.a;
         if (_EnableRampDebuger > 0.5)
@@ -215,14 +228,16 @@ half4 Fragment(Varyings input) : SV_Target
     {
         float3 positionWS = float3(input.tangentWS.w, input.bitangentWS.w, input.normalWS.w);
         float3 viewDir = normalize(_WorldSpaceCameraPos - positionWS);
-        float fresnel = saturate(dot(viewDir, input.normalWS.xyz));
+        float fresnel = pow(saturate(dot(viewDir, input.normalWS.xyz)),_FresnelPower);
 
-        half4 fresnelIntensity = half4(_FresnelColorIntensity.xxx,_FresnelAlphaIntensity);
+        half4 fresnelIntensity = half4(_FresnelColorIntensity.xxx, _FresnelAlphaIntensity);
         half4 fresnelSoftnessMin = half4(_FresnelColorSoftnessMin.xxx, _FresnelAlphaSoftnessMin);
         half4 fresnelSoftnessMax = half4(_FresnelColorSoftnessMax.xxx, _FresnelAlphaSoftnessMax);
-        half4 finalFresnel =  smoothstep(fresnelSoftnessMin, fresnelSoftnessMax, fresnel) * fresnelIntensity;
-        half4 fresnelColor = half4(_FresnelColor.rgb,_FresnelAlphaMode);
-        half4 finalColor = half4(finalRGB,finalAlpha);
+        half4 fresnelPower = half4(_FresnelColorPower.xxx, _FresnelAlphaPower);
+
+        half4 finalFresnel = smoothstep(fresnelSoftnessMin, fresnelSoftnessMax, fresnel) * fresnelIntensity;
+        half4 fresnelColor = half4(_FresnelColor.rgb, _FresnelAlphaMode);
+        half4 finalColor = half4(finalRGB, finalAlpha);
         finalColor = lerp(finalColor, fresnelColor, finalFresnel);
 
         finalRGB = finalColor.rgb;
@@ -239,7 +254,7 @@ half4 Fragment(Varyings input) : SV_Target
     {
         float2 mask_uv = ApplyFlowDistortion(input.mask_uv.xy, flowVector, _FlowIntensityToMultiMap.z);
         half sample_mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, mask_uv)[_MaskAlphaChannel];
-        finalAlpha *= sample_mask * input.color.w;
+        finalAlpha *= lerp(1,lerp(sample_mask,1 - sample_mask,_InvertMask),_MaskIntensity) * input.color.w;
         if (_EnableMaskDebuger)
         {
             return half4(sample_mask.xxx, 1);
@@ -311,16 +326,33 @@ half4 Fragment(Varyings input) : SV_Target
 
         // 应用软化因子，创建平滑过渡
         float intersectionFactor = saturate(depthDifference / _IntersectionSoftness);
+        if (_DepthBlendMode < 0.5)
+        {
+            // 应用相交因子到透明度
+            finalAlpha *= intersectionFactor;
+        }
+        else
+        {
+            finalRGB = lerp(_DepthBlendColor.rgb * finalRGB,finalRGB,  intersectionFactor);
+        }
 
-        // 应用相交因子到透明度
-        finalAlpha *= intersectionFactor;
     }
+
     half4 finalColor = 1;
     if (_EnableScreenDistortion > 0.5)
     {
         half4 temp = half4(finalRGB, finalAlpha);
-        half screenDistortion = saturate(temp[_ScreenDistortionChannel] * _ScreenDistortionIntensity) * 0.5 + 0.5;
-        return screenDistortion;
+        if (_EnableScreenDistortionNormal > 0.5)
+        {
+            half2 normal = lerp(0.5,half4(TransformWorldToViewNormal(input.normalWS).xy,1,1) * 0.5 + 0.5,_ScreenDistortionIntensity);
+            return half4(normal,0,1);
+        }
+        else
+        {
+            half screenDistortion = saturate(temp[_ScreenDistortionChannel] );
+            return half4(lerp(0.0,_ScreenDistortionIntensity,screenDistortion).xx,1,1) * 0.5 + 0.5;
+        }
+        
     }
     else
     {

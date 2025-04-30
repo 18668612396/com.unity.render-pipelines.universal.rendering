@@ -6,7 +6,7 @@
         {
             Alpha,
             Additive,
-            Replace
+            Replace,
         }
 
         // https://zhuanlan.zhihu.com/p/110517201

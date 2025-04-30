@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class ParticleSystemCreator : Editor
 {
@@ -99,6 +100,42 @@ public class ParticleSystemCreator : Editor
         //选择当前这个GameObject
         Selection.activeObject = go;
     }
+    [MenuItem("GameObject/Effects/一次性发射器Billboard", false, 10)]
+    public static void CreateSingleBillboardEmitter(MenuCommand menuCommand)
+    {
+        //创建一个新的GameObject
+        GameObject go = new GameObject("Single Billboard Emitter");
+        //设置父对象,如果当前选择了一个对象,则将新对象设置为当前选择对象的子对象
+        GameObjectUtility.SetParentAndAlign(go, menuCommand.context as GameObject);
+        //确保新对象在层级视图中正确显示
+        Undo.RegisterCreatedObjectUndo(go, "Create " + go.name);
+        //添加组件
+        var particle = go.AddComponent<ParticleSystem>();
+        //设置一些额外参数
+        var main = particle.main;
+        //设置start lifttime为在两个值之间随机
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 1.5f);
+        main.startSpeed = new ParticleSystem.MinMaxCurve(0.5f, 1.5f);
+        main.startSize = new ParticleSystem.MinMaxCurve(0.5f, 1.5f);
+        main.startColor = new ParticleSystem.MinMaxGradient(Color.white, Color.red);
+        //设置粒子系统的属性
+        //1:关闭ShapeModule
+        //设置粒子为单次发射一个
+        SetSinglePointEmission(particle,30);
+        //设置粒子的材质
+        SetRendererMaterial(particle);
+        //设置最大粒子数量
+        SetMaxParticles(particle,30);
+        //设置最大粒子尺寸
+        SetMaxParticleSize(particle);
+        //设置粒子的缩放模式
+        SetScalingMode(particle);
+        //设置粒子的循环模式
+        DisableLooping(particle);
+        //选择当前这个GameObject
+        Selection.activeObject = go;
+    }
+    
 
     static void DisableLooping(ParticleSystem particle)
     {
@@ -136,13 +173,13 @@ public class ParticleSystemCreator : Editor
         shape.enabled = false;
     }
 
-    static void SetSinglePointEmission(ParticleSystem particle)
+    static void SetSinglePointEmission(ParticleSystem particle,int count = 1)
     {
         var emission = particle.emission;
         emission.rateOverTime = 0;
         //设置粒子的发射模式为Burst
         emission.burstCount = 1;
-        emission.SetBurst(0, new ParticleSystem.Burst(0, 1));
+        emission.SetBurst(0, new ParticleSystem.Burst(0, count));
     }
 
     static void SetSpeedToZero(ParticleSystem particle)
