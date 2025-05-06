@@ -1,6 +1,6 @@
 {
-  "name": "com.unity.render-pipelines.universal.rendering",
-  "description": "\u57fa\u4e8eUnity6\u7684URP\u6e32\u67d3\u989d\u5916\u529f\u80fd",
+  "name": "com.world.xrender",
+  "description": "基于 URP 的渲染额外功能",
   "version": "1.0.0",
-  "displayName": "_RenderCore"
+  "displayName": "XRender"
 }
