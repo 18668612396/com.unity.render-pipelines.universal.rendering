@@ -350,21 +350,21 @@ half4 Fragment(Varyings input) : SV_Target
 
     half4 finalColor = 1;
 
-    #if _ENABLE_SCREENDISTORTION_ON
-    {
-        half4 temp = half4(finalRGB, finalAlpha);
-        if (_EnableScreenDistortionNormal > 0.5)
-        {
-            half2 normal = lerp(0.5, half4(TransformWorldToViewDir(input.normalWS).xy, 1, 1) * 0.5 + 0.5, _ScreenDistortionIntensity);
-            return half4(normal, 0, 1);
-        }
-        else
-        {
-            half screenDistortion = saturate(temp[_ScreenDistortionChannel]);
-            return half4(lerp(0.0, _ScreenDistortionIntensity, screenDistortion).xx, 1, 1) * 0.5 + 0.5;
-        }
-    }
-    #else
+    // #if _ENABLE_SCREENDISTORTION_ON
+    // {
+    //     half4 temp = half4(finalRGB, finalAlpha);
+    //     if (_EnableScreenDistortionNormal > 0.5)
+    //     {
+    //         half2 normal = lerp(0.5, half4(TransformWorldToViewDir(input.normalWS).xy, 1, 1) * 0.5 + 0.5, _ScreenDistortionIntensity);
+    //         return half4(normal, 0, 1);
+    //     }
+    //     else
+    //     {
+    //         half screenDistortion = saturate(temp[_ScreenDistortionChannel]);
+    //         return half4(lerp(0.0, _ScreenDistortionIntensity, screenDistortion).xx, 1, 1) * 0.5 + 0.5;
+    //     }
+    // }
+    // #else
     {
         if (_BlendMode < 0.5)
         {
@@ -380,7 +380,7 @@ half4 Fragment(Varyings input) : SV_Target
             clip(finalAlpha - _Cutoff);
         }
     }
-    #endif
+    // #endif
 
     return finalColor;
 }
