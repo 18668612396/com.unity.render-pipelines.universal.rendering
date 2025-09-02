@@ -208,11 +208,11 @@ Shader "XEffect/EffectStandard"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareOpaqueTexture.hlsl"
             #include "EffectStandard_Input.hlsl"
-            #include "EffectStaandard_Function.hlsl"
+            #include "EffectStandard_Function.hlsl"
             #include "EffectStandard_Passes.hlsl"
             #pragma vertex Vertex
             #pragma fragment Fragment
-            #pragma shader_feature_local_fragment  _ENABLE_MASK_ON
+            #pragma shader_feature_local_fragment _ENABLE_MASK_ON
             #pragma shader_feature_local_fragment _ENABLE_SECOND_ON
             #pragma shader_feature_local_fragment _ENABLE_RAMP_ON
             #pragma shader_feature_local_fragment _ENABLE_FLOW_ON
