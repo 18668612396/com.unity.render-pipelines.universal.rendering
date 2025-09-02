@@ -180,15 +180,15 @@ Shader "XEffect/EffectStandard"
             #include "EffectStandard_Passes.hlsl"
             #pragma vertex Vertex
             #pragma fragment Fragment
-            #pragma shader_feature_local _ENABLE_MASK_ON
-            #pragma shader_feature_local _ENABLE_SECOND_ON
-            #pragma shader_feature_local _ENABLE_RAMP_ON
-            #pragma shader_feature_local _ENABLE_FLOW_ON
-            #pragma shader_feature_local _ENABLE_DISSOLUTION_ON
-            #pragma shader_feature_local _ENABLE_DEPTHBLEND_ON
-            #pragma shader_feature_local _ENABLE_FRESNEL_ON
-            #pragma shader_feature_local _ENABLE_NORMALMAP_ON
-            #pragma shader_feature_local _ENABLE_SCREENDISTORTION_ON
+            #pragma shader_feature_local_fragment  _ENABLE_MASK_ON
+            #pragma shader_feature_local_fragment _ENABLE_SECOND_ON
+            #pragma shader_feature_local_fragment _ENABLE_RAMP_ON
+            #pragma shader_feature_local_fragment _ENABLE_FLOW_ON
+            #pragma shader_feature_local_fragment _ENABLE_DISSOLUTION_ON
+            #pragma shader_feature_local_fragment _ENABLE_DEPTHBLEND_ON
+            #pragma shader_feature_local_fragment _ENABLE_FRESNEL_ON
+            #pragma shader_feature_local_fragment _ENABLE_NORMALMAP_ON
+            #pragma shader_feature_local_fragment _ENABLE_SCREENDISTORTION_ON
             ENDHLSL
         }
         Pass
