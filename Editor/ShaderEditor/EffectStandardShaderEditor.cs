@@ -68,7 +68,7 @@ public class EffectStandardShaderEditor : ModularShaderEditor
     private static readonly string _KEYWORD_FLOW = new string("_ENABLE_FLOW_ON");
     private static readonly string _KEYWORD_FRESNEL = new string("_ENABLE_FRESNEL_ON");
     private static readonly string _KEYWORD_DEPTHBLEND = new string("_ENABLE_DEPTHBLEND_ON");
-    private static readonly string _KEYWORD_SCREENDISTORTION = new string("_ENABLE_SCREENDISTORTION_ON");
+    // private static readonly string _KEYWORD_SCREENDISTORTION = new string("_ENABLE_SCREENDISTORTION_ON");
 
     // 假设这是你的属性字典
     protected override Dictionary<(string ModuleName, string PropertyName, string keyword), Action<MaterialEditor>> ModuleProperties => new Dictionary<(string ModuleName, string PropertyName, string keyword), Action<MaterialEditor>>
@@ -82,7 +82,7 @@ public class EffectStandardShaderEditor : ModularShaderEditor
         { ("扰动", "_EnableFlow", _KEYWORD_FLOW), DrawFlowModule },
         { ("菲涅尔", "_EnableFresnel", _KEYWORD_FRESNEL), DrawFresnelModule },
         { ("深度混合", "_EnableDepthBlend", _KEYWORD_DEPTHBLEND), DrawDepthBlendModule },
-        { ("热扭曲", "_EnableScreenDistortion", _KEYWORD_SCREENDISTORTION), DrawScreenDistortionModule }
+        // { ("热扭曲", "_EnableScreenDistortion", _KEYWORD_SCREENDISTORTION), DrawScreenDistortionModule }
     };
 
     public readonly string[] s_BlendeModeNames = Enum.GetNames(typeof(RenderingBlendUtils.BlendMode));
@@ -354,12 +354,14 @@ public class EffectStandardShaderEditor : ModularShaderEditor
         materialEditor.ShaderProperty(FindProperty("_IntersectionSoftness"), "交叉软边度");
     }
 
+    /*
     private void DrawScreenDistortionModule(MaterialEditor materialEditor)
     {
         FindProperty("_ScreenDistortionChannel").floatValue = (float)(XYZWChannel)EditorGUILayout.EnumPopup(new GUIContent("扭曲通道", "使用当前材质球输出的RGBA做选择"), (XYZWChannel)FindProperty("_ScreenDistortionChannel").floatValue);
         materialEditor.ShaderProperty(FindProperty("_EnableScreenDistortionNormal"), "扭曲法线");
         materialEditor.ShaderProperty(FindProperty("_ScreenDistortionIntensity"), "热扭曲强度");
     }
+    */
 
     protected override void OnAfterDefaultGUI(MaterialEditor materialEditor)
     {
