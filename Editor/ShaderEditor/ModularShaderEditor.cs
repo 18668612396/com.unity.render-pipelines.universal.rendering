@@ -4,9 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Rendering;
+using UnityEngine.Rendering;
 
 
-    public abstract class ModularShaderEditor : ShaderGUI
+public abstract class ModularShaderEditor : ShaderGUI
     {
         private bool initialized = false;
 
@@ -24,7 +25,7 @@ using UnityEditor.Rendering;
         /// <summary>
         /// 自定义模块属性 ModuleProperties
         /// </summary>
-        protected abstract Dictionary<(string ModuleName, string PropertyName), Action<MaterialEditor>> ModuleProperties { get; }
+        protected abstract Dictionary<(string ModuleName, string PropertyName, string keyword), Action<MaterialEditor>> ModuleProperties { get; }
 
         /// <summary>
         /// 最先绘制的GUI，OnBeforeDefaultGUI
@@ -165,7 +166,7 @@ using UnityEditor.Rendering;
                 bool isEnabled = material.HasProperty(module.Key.PropertyName)
                                  && material.GetFloat(module.Key.PropertyName) > 0.5f;
                 m_ModuleStates[module.Key.ModuleName] = isEnabled;
-                SetShaderKeyword(module.Key.ModuleName, isEnabled);
+                SetShaderKeyword(module.Key.keyword, isEnabled);
             }
 
             // 创建适当大小的数组并初始化为true或false
@@ -217,8 +218,7 @@ using UnityEditor.Rendering;
                 material.SetFloat(moduleEntry.Key.PropertyName, 1.0f);
                 EditorUtility.SetDirty(material);
             }
-            material.EnableKeyword(moduleEntry.Key.ModuleName);
-            SetShaderKeyword(moduleEntry.Key.PropertyName, true);
+            SetShaderKeyword(moduleEntry.Key.keyword, true);
         }
 
         private void RemoveModule(string moduleName)
@@ -234,7 +234,7 @@ using UnityEditor.Rendering;
                 material.SetFloat(moduleEntry.Key.PropertyName, 0.0f);
                 EditorUtility.SetDirty(material);
             }
-            SetShaderKeyword(moduleEntry.Key.PropertyName, false);
+            SetShaderKeyword(moduleEntry.Key.keyword, false);
         }
 
         // 在 ModularShaderEditor 类中添加移动模块的辅助方法
@@ -297,9 +297,8 @@ using UnityEditor.Rendering;
 
         #region Utility Methods
 
-        private void SetShaderKeyword(string moduleName, bool enable)
+        private void SetShaderKeyword(string keyword, bool enable)
         {
-            string keyword = moduleName;
             if (enable)
                 material.EnableKeyword(keyword);
             else

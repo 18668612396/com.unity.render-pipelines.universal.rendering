@@ -59,17 +59,30 @@ public class EffectStandardShaderEditor : ModularShaderEditor
     protected override string MainModuleName => "Main";
     protected override string AfterModuleName => "After";
 
-    protected override Dictionary<(string ModuleName, string PropertyName), Action<MaterialEditor>> ModuleProperties => new Dictionary<(string ModuleName, string PropertyName), Action<MaterialEditor>>
+// 1. 在类的顶部声明所有的 ShaderKeyword
+    private static readonly string _KEYWORD_SECOND = new string("_ENABLE_SECOND_ON");
+    private static readonly string _KEYWORD_RAMP = new string("_ENABLE_RAMP_ON");
+    private static readonly string _KEYWORD_NORMAL = new string("_ENABLE_NORMALMAP_ON");
+    private static readonly string _KEYWORD_MASK = new string("_ENABLE_MASK_ON");
+    private static readonly string _KEYWORD_DISSOLUTION = new string("_ENABLE_DISSOLUTION_ON");
+    private static readonly string _KEYWORD_FLOW = new string("_ENABLE_FLOW_ON");
+    private static readonly string _KEYWORD_FRESNEL = new string("_ENABLE_FRESNEL_ON");
+    private static readonly string _KEYWORD_DEPTHBLEND = new string("_ENABLE_DEPTHBLEND_ON");
+    private static readonly string _KEYWORD_SCREENDISTORTION = new string("_ENABLE_SCREENDISTORTION_ON");
+
+    // 假设这是你的属性字典
+    protected override Dictionary<(string ModuleName, string PropertyName, string keyword), Action<MaterialEditor>> ModuleProperties => new Dictionary<(string ModuleName, string PropertyName, string keyword), Action<MaterialEditor>>
     {
-        { ("第二层纹理", "_EnableSecond"), DrawSecondModule },
-        { ("映射贴图", "_EnableRamp"), DrawRampModule },
-        { ("法线", "_EnableNormalMap"), DrawNormalModule },
-        { ("遮罩", "_EnableMask"), DrawMaskModule },
-        { ("溶解", "_EnableDissolution"), DrawDissolveModule },
-        { ("扰动", "_EnableFlow"), DrawFlowModule },
-        { ("菲涅尔", "_EnableFresnel"), DrawFresnelModule },
-        { ("深度混合", "_EnableDepthBlend"), DrawDepthBlendModule },
-        { ("热扭曲", "_EnableScreenDistortion"), DrawScreenDistortionModule }
+        // 2. 在初始化元组时，传入对应的 ShaderKeyword 实例
+        { ("第二层纹理", "_EnableSecond", _KEYWORD_SECOND), DrawSecondModule },
+        { ("映射贴图", "_EnableRamp", _KEYWORD_RAMP), DrawRampModule },
+        { ("法线", "_EnableNormalMap", _KEYWORD_NORMAL), DrawNormalModule },
+        { ("遮罩", "_EnableMask", _KEYWORD_MASK), DrawMaskModule },
+        { ("溶解", "_EnableDissolution", _KEYWORD_DISSOLUTION), DrawDissolveModule },
+        { ("扰动", "_EnableFlow", _KEYWORD_FLOW), DrawFlowModule },
+        { ("菲涅尔", "_EnableFresnel", _KEYWORD_FRESNEL), DrawFresnelModule },
+        { ("深度混合", "_EnableDepthBlend", _KEYWORD_DEPTHBLEND), DrawDepthBlendModule },
+        { ("热扭曲", "_EnableScreenDistortion", _KEYWORD_SCREENDISTORTION), DrawScreenDistortionModule }
     };
 
     public readonly string[] s_BlendeModeNames = Enum.GetNames(typeof(RenderingBlendUtils.BlendMode));
