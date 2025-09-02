@@ -22,13 +22,13 @@ Shader "XEffect/EffectStandard"
         [Enum(Disable,0,X, 1, Y, 2, Z, 3, W, 4)]_MainAnimationCustomDataChannel02("Mask CustomData Channel02", Int) = 0//V方向通道选择
         _MainAnimationChannelAndSpeed("Main Animation Channel And Speed", Vector) = (0, 0, 0, 0)//X: X方向通道选择，Y: Y方向通道选择，Z: X方向速度，W: Y方向速度
         //Normal
-        [Toggle(ENABLE_NORMALMAP_ON)] _EnableNormalMap ("NormalMap On", Float) = 0
+        [Toggle(_ENABLE_NORMALMAP_ON)] _EnableNormalMap ("NormalMap On", Float) = 0
         _NormalMap("NormalMap", 2D) = "bump" {}
         _NormalMapIntensity ("NormalMap Intensity", Range(0, 5)) = 1
         _LightColor("Light Color", Color) = (1,1,1,1)
         _ShadowColor("Shadow Color", Color) = (0,0,0,1)
         //Secondary
-        [Toggle(ENABLE_SECOND_ON)] _EnableSecond ("Second On", Float) = 0
+        [Toggle(_ENABLE_SECOND_ON)] _EnableSecond ("Second On", Float) = 0
         [Toggle]_EnableMultiMainAlpha("Enable Multi Main Alpha", Float) = 0//是否启用主纹理的透明度乘以第二纹理的透明度
         _SecondTex("SecondTex", 2D) = "white" {}
         [HDR]_SecondColor01("SecondColor01", Color) = (1,1,1,1)
@@ -49,14 +49,14 @@ Shader "XEffect/EffectStandard"
         _SecondDissolutionThreshold("Second Dissolution Threshold", Range(1, 0)) = 0.5
         _SecondDissolutionSoftness ("Second Dissolution Softness", Range(0, 1)) = 0.1
         //Ramp
-        [Toggle(ENABLE_RAMP_ON)] _EnableRamp ("Ramp On", Float) = 0
+        [Toggle(_ENABLE_RAMP_ON)] _EnableRamp ("Ramp On", Float) = 0
         _EnableRampDebuger("Enable Ramp Debuger", Float) = 0
         [Enum(UV,0,R, 1,G,2,B,3,A,4)]_RampMapSource("Ramp Channel", Float) = 0
         _RampMap("RampMap", 2D) = "white" {}
         _RampMapRotationParams("_SecondRotationParams",Vector) = (1,0,0,0)
         _RampIntensity("Ramp Intensity", Range(0, 100)) = 1
         //Flow
-        [Toggle(ENABLE_FLOW_ON)] _EnableFlow ("Flow On", Float) = 0
+        [Toggle(_ENABLE_FLOW_ON)] _EnableFlow ("Flow On", Float) = 0
         _EnableFlowDebuger("Enable Flow Debuger", Float) = 0
         _FlowTex("FlowTex", 2D) = "white" {}
         _FlowIntensityToMultiMap("Flow Intensity To MultiMap",Vector) = (1,1,1,1)
@@ -71,7 +71,7 @@ Shader "XEffect/EffectStandard"
         [Enum(Disable,0,X, 1, Y, 2, Z, 3, W, 4)]_VertexAnimationStrengthCustomDataChannel03("Flow CustomData Channel02", Int) = 0//Z方向通道选择
         _VertexAnimationStrength("Enable Vertex Animation Strength", Vector) = (0, 0, 0, 0)//XYZ : 自身空间偏移，W:法线朝向偏移
         //Mask
-        [Toggle(ENABLE_MASK_ON)] _EnableMask ("Mask On", Float) = 0
+        [Toggle(_ENABLE_MASK_ON)] _EnableMask ("Mask On", Float) = 0
         [Toggle]_EnableMaskDebuger("Enable Mask Debuger", Float) = 0
         _MaskTex("MaskTex", 2D) = "white" {}
         _MaskIntensity("Mask Intensity", Range(0, 1)) = 1
@@ -83,7 +83,7 @@ Shader "XEffect/EffectStandard"
         [Enum(Disable,0,X, 1, Y, 2, Z, 3, W, 4)]_MaskAnimationCustomDataChannel02("Mask CustomData Channel02", Int) = 0//V方向通道选择
 
         //Dissolution
-        [Toggle(ENABLE_DISSOLUTION_ON)] _EnableDissolution ("Dissolution On", Float) = 0
+        [Toggle(_ENABLE_DISSOLUTION_ON)] _EnableDissolution ("Dissolution On", Float) = 0
         _DissolutionTex("DissolutionTex", 2D) = "white" {}
         [Enum(R, 0, G, 1, B, 2, A, 3)] _DissolutionChannel("_DissolutionChannel",int) = 0
         [HDR]_DissolutionColor("Dissolution Color", Color) = (1,1,1,1)
@@ -96,12 +96,12 @@ Shader "XEffect/EffectStandard"
         _DissolutionSoftness("Dissolution Softness", Range(0,1)) = 0.1
         _DissolutionRotationParams("Dissolution Rotation Params", Vector) = (1, 0, 0, 0)
         //Depth
-        [Toggle(ENABLE_DEPTHBLEND_ON)] _EnableDepthBlend ("Dissolution On", Float) = 0
+        [Toggle(_ENABLE_DEPTHBLEND_ON)] _EnableDepthBlend ("Dissolution On", Float) = 0
         [Enum(SoftParticle, 0, HardParticle, 1)] _DepthBlendMode("Depth Blend Mode", Float) = 0
         [HDR]_DepthBlendColor("Depth Blend Color", Color) = (1,1,1,1)
         _IntersectionSoftness ("Intersection Softness", Range(0, 1)) = 0.1
         //fresnel
-        [Toggle] _EnableFresnel("Enable Fresnel", Float) = 0
+        [Toggle(_ENABLE_FRESNEL_ON)] _EnableFresnel("Enable Fresnel", Float) = 0
         [Toggle] _EnableFresnelDebuger("Enable Fresnel Debuger", Float) = 0
         _FresnelPower("Fresnel Power", Range(0, 10)) = 1
         [HDR]_FresnelColor("Fresnel Color", Color) = (1,1,1,1)
@@ -118,7 +118,7 @@ Shader "XEffect/EffectStandard"
         _FresnelAlphaSoftnessMax("Fresnel Alpha Softness Max", Range(0, 1)) = 1
 
         //屏幕扭曲
-        [Toggle]_EnableScreenDistortion("Enable Screen Distortion", Float) = 0
+        [Toggle(_ENABLE_SCREENDISTORTION_ON)]_EnableScreenDistortion("Enable Screen Distortion", Float) = 0
         [Toggle] _EnableScreenDistortionNormal("Enable Screen Distortion Normal", Float) = 0
         _ScreenDistortionChannel("Screen Distortion Channel", Float) = 3//根据当前材质球输出的RGBA做选择
         _ScreenDistortionIntensity("Screen Distortion Intensity", Range(0, 1)) = 0.5
@@ -180,9 +180,15 @@ Shader "XEffect/EffectStandard"
             #include "EffectStandard_Passes.hlsl"
             #pragma vertex Vertex
             #pragma fragment Fragment
-            #pragma shader_feature_local ENABLE_MASK_ON
-            #pragma shader_feature_local ENABLE_SECOND_ON
-            #pragma shader_feature_local ENABLE_SECOND_ON
+            #pragma shader_feature_local _ENABLE_MASK_ON
+            #pragma shader_feature_local _ENABLE_SECOND_ON
+            #pragma shader_feature_local _ENABLE_RAMP_ON
+            #pragma shader_feature_local _ENABLE_FLOW_ON
+            #pragma shader_feature_local _ENABLE_DISSOLUTION_ON
+            #pragma shader_feature_local _ENABLE_DEPTHBLEND_ON
+            #pragma shader_feature_local _ENABLE_FRESNEL_ON
+            #pragma shader_feature_local _ENABLE_NORMALMAP_ON
+            #pragma shader_feature_local _ENABLE_SCREENDISTORTION_ON
             ENDHLSL
         }
         Pass
@@ -207,9 +213,15 @@ Shader "XEffect/EffectStandard"
             #include "EffectStandard_Passes.hlsl"
             #pragma vertex Vertex
             #pragma fragment Fragment
-            #pragma shader_feature_local ENABLE_MASK_ON
-            #pragma shader_feature_local ENABLE_SECOND_ON
-            #pragma shader_feature_local ENABLE_SECOND_ON
+            #pragma shader_feature_local _ENABLE_MASK_ON
+            #pragma shader_feature_local _ENABLE_SECOND_ON
+            #pragma shader_feature_local _ENABLE_RAMP_ON
+            #pragma shader_feature_local _ENABLE_FLOW_ON
+            #pragma shader_feature_local _ENABLE_DISSOLUTION_ON
+            #pragma shader_feature_local _ENABLE_DEPTHBLEND_ON
+            #pragma shader_feature_local _ENABLE_FRESNEL_ON
+            #pragma shader_feature_local _ENABLE_NORMALMAP_ON
+            #pragma shader_feature_local _ENABLE_SCREENDISTORTION_ON
             ENDHLSL
         }
     }

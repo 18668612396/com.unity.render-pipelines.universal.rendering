@@ -1,5 +1,6 @@
 #ifndef EFFECT_STANDARD_PASSES_INCLUDED
 #define EFFECT_STANDARD_PASSES_INCLUDED
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
 struct Attributes
 {
@@ -105,7 +106,6 @@ Varyings Vertex(Attributes input)
 
 half4 Fragment(Varyings input) : SV_Target
 {
-
     half3 finalRGB = 0;
     half finalAlpha = 1;
 
@@ -120,7 +120,7 @@ half4 Fragment(Varyings input) : SV_Target
     }
 
     float2 flowVector = float2(0.0, 0.0);
-    if (_EnableFlow > 0.5)
+    #if _ENABLE_FLOW_ON
     {
         half sample_flow = SAMPLE_TEXTURE2D(_FlowTex, sampler_FlowTex, input.flow_uv.xy)[_FlowTexChannel];
         flowVector = sample_flow - 1.0;
@@ -129,6 +129,8 @@ half4 Fragment(Varyings input) : SV_Target
             return half4(sample_flow.xxx, 1);
         }
     }
+    #endif
+
     //main
     float2 main_uv = ApplyFlowDistortion(input.uv.xy, flowVector, _FlowIntensityToMultiMap.x);
     half4 sample_main = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, main_uv);
@@ -136,7 +138,7 @@ half4 Fragment(Varyings input) : SV_Target
     finalRGB = sample_main.rgb * _MainTexColor.rgb * input.color.rgb * _MainTexIntensity;
     finalAlpha = sample_main.a * _MainTexColor.a * input.color.a;
 
-    if (_EnableSecond > 0.5)
+    #if _ENABLE_SECOND_ON
     {
         //second
         float2 second_uv = ApplyFlowDistortion(input.second_uv.xy, flowVector, _FlowIntensityToMultiMap.y);
@@ -192,14 +194,15 @@ half4 Fragment(Varyings input) : SV_Target
             finalAlpha = lerp(finalAlpha, secondColor.a, secondAlpha);
         }
     }
+    #endif
 
-    if (_EnableRamp > 0.5)
+    #if _ENABLE_RAMP_ON
     {
         float2 ramp_uv = input.ramp_uv;
         if (_RampMapSource > 0.5)
         {
-            float4 source = float4(finalRGB,finalAlpha);
-            ramp_uv = float2(source[_RampMapSource - 1] , 0.5);
+            float4 source = float4(finalRGB, finalAlpha);
+            ramp_uv = float2(source[_RampMapSource - 1], 0.5);
         }
         half4 sample_ramp = SAMPLE_TEXTURE2D(_RampMap, sampler_RampMap, ramp_uv);
         finalRGB.rgb = finalRGB.rgb * sample_ramp.rgb * _RampIntensity;
@@ -209,9 +212,10 @@ half4 Fragment(Varyings input) : SV_Target
             return half4(sample_ramp.rgb, 1);
         }
     }
+    #endif
 
     //normal
-    if (_EnableNormalMap > 0.5)
+    #if _ENABLE_NORMALMAP_ON
     {
         float3x3 TBN = float3x3(input.tangentWS.xyz, input.bitangentWS.xyz, input.normalWS.xyz);
         half3 sample_normal = SAMPLE_TEXTURE2D(_NormalMap, sampler_NormalMap, input.normal_uv.xy).xyz;
@@ -223,12 +227,15 @@ half4 Fragment(Varyings input) : SV_Target
         half3 lightColor = lerp(_ShadowColor, _LightColor, NdotL);
         finalRGB += lightColor;
     }
+    #endif
+
     finalRGB *= brightness;
-    if (_EnableFresnel > 0.5)
+
+    #if _ENABLE_FRESNEL_ON
     {
         float3 positionWS = float3(input.tangentWS.w, input.bitangentWS.w, input.normalWS.w);
         float3 viewDir = normalize(_WorldSpaceCameraPos - positionWS);
-        float fresnel = pow(saturate(dot(viewDir, input.normalWS.xyz)),_FresnelPower);
+        float fresnel = pow(saturate(dot(viewDir, input.normalWS.xyz)), _FresnelPower);
 
         half4 fresnelIntensity = half4(_FresnelColorIntensity.xxx, _FresnelAlphaIntensity);
         half4 fresnelSoftnessMin = half4(_FresnelColorSoftnessMin.xxx, _FresnelAlphaSoftnessMin);
@@ -248,20 +255,22 @@ half4 Fragment(Varyings input) : SV_Target
             return finalFresnel;
         }
     }
+    #endif
 
     //mask
-    if (_EnableMask > 0.5)
+    #if _ENABLE_MASK_ON
     {
         float2 mask_uv = ApplyFlowDistortion(input.mask_uv.xy, flowVector, _FlowIntensityToMultiMap.z);
         half sample_mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, mask_uv)[_MaskAlphaChannel];
-        finalAlpha *= lerp(1,lerp(sample_mask,1 - sample_mask,_InvertMask),_MaskIntensity) * input.color.w;
+        finalAlpha *= lerp(1, lerp(sample_mask, 1 - sample_mask, _InvertMask), _MaskIntensity) * input.color.w;
         if (_EnableMaskDebuger)
         {
             return half4(sample_mask.xxx, 1);
         }
     }
+    #endif
 
-    if (_EnableDissolution > 0.5)
+    #if _ENABLE_DISSOLUTION_ON
     {
         float dissolutionValue;
         {
@@ -308,8 +317,9 @@ half4 Fragment(Varyings input) : SV_Target
         finalRGB.rgb = lerp(dissolutionColor, finalRGB, factor);
         finalAlpha *= factor;
     }
+    #endif
 
-    if (_EnableDepthBlend > 0.5)
+    #if _ENABLE_DEPTHBLEND_ON
     {
         // 获取屏幕空间UV
         float2 screenUV = input.screenPos.xy / input.screenPos.w;
@@ -333,28 +343,28 @@ half4 Fragment(Varyings input) : SV_Target
         }
         else
         {
-            finalRGB = lerp(_DepthBlendColor.rgb * finalRGB,finalRGB,  intersectionFactor);
+            finalRGB = lerp(_DepthBlendColor.rgb * finalRGB, finalRGB, intersectionFactor);
         }
-
     }
+    #endif
 
     half4 finalColor = 1;
-    if (_EnableScreenDistortion > 0.5)
+
+    #if _ENABLE_SCREENDISTORTION_ON
     {
         half4 temp = half4(finalRGB, finalAlpha);
         if (_EnableScreenDistortionNormal > 0.5)
         {
-            half2 normal = lerp(0.5,half4(TransformWorldToViewNormal(input.normalWS).xy,1,1) * 0.5 + 0.5,_ScreenDistortionIntensity);
-            return half4(normal,0,1);
+            half2 normal = lerp(0.5, half4(TransformWorldToViewDir(input.normalWS).xy, 1, 1) * 0.5 + 0.5, _ScreenDistortionIntensity);
+            return half4(normal, 0, 1);
         }
         else
         {
-            half screenDistortion = saturate(temp[_ScreenDistortionChannel] );
-            return half4(lerp(0.0,_ScreenDistortionIntensity,screenDistortion).xx,1,1) * 0.5 + 0.5;
+            half screenDistortion = saturate(temp[_ScreenDistortionChannel]);
+            return half4(lerp(0.0, _ScreenDistortionIntensity, screenDistortion).xx, 1, 1) * 0.5 + 0.5;
         }
-        
     }
-    else
+    #else
     {
         if (_BlendMode < 0.5)
         {
@@ -370,6 +380,8 @@ half4 Fragment(Varyings input) : SV_Target
             clip(finalAlpha - _Cutoff);
         }
     }
+    #endif
+
     return finalColor;
 }
 
